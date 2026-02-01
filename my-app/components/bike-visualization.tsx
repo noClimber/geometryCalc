@@ -9,7 +9,7 @@ import {
   SCALE,
 } from '@/lib/bike-geometry'
 import { Card } from '@/components/ui/card'
-import { useState, useRef, type MouseEvent, type WheelEvent } from 'react'
+import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } from 'react'
 
 type BikeVisualizationProps = {
   bikeA: BikeData | null
@@ -27,6 +27,7 @@ export function BikeVisualization({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [measurePoints, setMeasurePoints] = useState<Array<{id: string, bike: 'A' | 'B'}>>([])
   const [measureMode, setMeasureMode] = useState(false)
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   const { zoom, pan } = viewState
@@ -85,6 +86,82 @@ export function BikeVisualization({
 
   const handleMouseLeave = () => {
     setIsDragging(false)
+  }
+
+  const getTouchDistance = (touches: TouchList) => {
+    if (touches.length < 2) return null
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      // Single finger - pan
+      setIsDragging(true)
+      setDragStart({ x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y })
+    } else if (e.touches.length === 2) {
+      // Two fingers - prepare for pinch zoom
+      setLastTouchDistance(getTouchDistance(e.touches))
+    }
+  }
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    
+    if (e.touches.length === 1 && isDragging && lastTouchDistance === null) {
+      // Single finger pan
+      setViewState((prev) => ({
+        ...prev,
+        pan: {
+          x: e.touches[0].clientX - dragStart.x,
+          y: e.touches[0].clientY - dragStart.y,
+        },
+      }))
+    } else if (e.touches.length === 2) {
+      // Two finger pinch zoom
+      const currentDistance = getTouchDistance(e.touches)
+      if (currentDistance && lastTouchDistance) {
+        const delta = currentDistance / lastTouchDistance
+        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+        
+        const svg = svgRef.current
+        const ctm = svg?.getScreenCTM()
+        
+        if (svg && ctm) {
+          const pt = svg.createSVGPoint()
+          pt.x = centerX
+          pt.y = centerY
+          const viewBoxPoint = pt.matrixTransform(ctm.inverse())
+          
+          setViewState((prev) => {
+            const newZoom = Math.max(0.5, Math.min(5, prev.zoom * delta))
+            const cx = viewBoxPoint.x / prev.zoom - prev.pan.x / prev.zoom ** 2
+            const cy = viewBoxPoint.y / prev.zoom - prev.pan.y / prev.zoom ** 2
+            return {
+              zoom: newZoom,
+              pan: {
+                x: viewBoxPoint.x * newZoom - cx * newZoom ** 2,
+                y: viewBoxPoint.y * newZoom - cy * newZoom ** 2,
+              },
+            }
+          })
+        } else {
+          setViewState((prev) => ({
+            ...prev,
+            zoom: Math.max(0.5, Math.min(5, prev.zoom * delta)),
+          }))
+        }
+        
+        setLastTouchDistance(currentDistance)
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    setLastTouchDistance(null)
   }
 
   const handleSvgClick = (e: MouseEvent<SVGSVGElement>) => {
@@ -259,6 +336,9 @@ export function BikeVisualization({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Grid background */}
         <svg

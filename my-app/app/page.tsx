@@ -74,18 +74,18 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('bikeA')
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <div className="w-[380px] border-r border-border bg-card overflow-y-auto flex flex-col">
-        <div className="p-6 border-b border-border">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <div className="flex flex-col md:flex-row h-screen bg-background">
+      {/* Sidebar - auf Mobile oben, auf Desktop links */}
+      <div className="w-full md:w-[380px] h-[50vh] md:h-screen border-b md:border-r md:border-b-0 border-border bg-card overflow-y-auto flex flex-col">
+        <div className="p-4 md:p-6 border-b border-border">
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
             Rennrad-Geometrie
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Vergleichs-Tool</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <TabsList className="mx-6 mt-6 grid w-auto grid-cols-2">
+          <TabsList className="mx-4 md:mx-6 mt-4 md:mt-6 grid w-auto grid-cols-2">
             <TabsTrigger value="bikeA" className="data-[state=active]:bg-[oklch(0.55_0.22_27)]">
               Bike A
             </TabsTrigger>
@@ -142,8 +142,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Visualization */}
-        <div className="flex-1 bg-background p-6">
+        {/* Visualization - auf Mobile unten, auf Desktop rechts */}
+        <div className="flex-1 bg-background p-4 md:p-6 h-[50vh] md:h-screen">
           <BikeVisualization
             bikeA={bikeA}
             bikeB={bikeB}
