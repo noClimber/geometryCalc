@@ -77,26 +77,25 @@ export function calculateBikeGeometry(
     y: points.headTubeTop.y + Math.sin(htaRad) * headTubeLen * SCALE,
   }
 
-  // Berechne vordere Radposition: Abstand BB->frontWheel = frontCenter
+  // Berechne vordere Radposition:
+  // Wenn `frontCenter` gegeben ist, ist das der Abstand vom BB (Ursprung) zur Vorderradachse.
+  // Dann liegt die Y-Position immer auf -bbDrop (wie beim Hinterrad) und X wird aus Pythagoras
+  // bestimmt: frontCenter^2 = x^2 + bbDrop^2.
   if (frontCenter) {
-    const u = { x: Math.cos(htaRad), y: Math.sin(htaRad) }
     const R = frontCenter * SCALE
-    const head = points.headTubeBottom
-    const headDotU = head.x * u.x + head.y * u.y
-    const headLen2 = head.x * head.x + head.y * head.y
-    const disc = 4 * headDotU * headDotU - 4 * (headLen2 - R * R)
-    const sqrtD = Math.sqrt(Math.max(0, disc))
-    const L = Math.max((-2 * headDotU + sqrtD) / 2, (-2 * headDotU - sqrtD) / 2)
-    points.frontWheel = {
-      x: points.headTubeBottom.x + u.x * L,
-      y: points.headTubeBottom.y + u.y * L,
-    }
+    const y = -bbDrop * SCALE
+    const x = Math.sqrt(Math.max(0, R * R - y * y))
+    points.frontWheel = { x, y }
   } else {
+    // Fallback: berechne das Vorderrad aus Gabel-Länge/-Richtung von headTubeBottom
+    // und setze die Y-Position auf -bbDrop. Die tatsächliche Gabel-Länge und der Winkel
+    // ergeben sich dann aus headTubeBottom -> frontWheel und werden nur zum Zeichnen verwendet.
     const forkDx = Math.cos(htaRad) * forkLength * SCALE
     const forkDy = Math.sin(htaRad) * forkLength * SCALE
+    const fx = points.headTubeBottom.x + forkDx
     points.frontWheel = {
-      x: points.headTubeBottom.x + forkDx,
-      y: points.headTubeBottom.y + forkDy,
+      x: fx,
+      y: -bbDrop * SCALE,
     }
   }
 
