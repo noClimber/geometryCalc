@@ -1,0 +1,262 @@
+{
+  "Specialized": {
+    "Tarmac SL8": {
+      "54": {
+        "stack": 540,
+        "reach": 383,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 72
+      },
+      "56": {
+        "stack": 563,
+        "reach": 393,
+        "headTubeAngle": 73.0,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 72
+      },
+      "58": {
+        "stack": 586,
+        "reach": 403,
+        "headTubeAngle": 73.5,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 72
+      }
+    },
+    "Roubaix": {
+      "54": {
+        "stack": 564,
+        "reach": 376,
+        "headTubeAngle": 72.0,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 75
+      },
+      "56": {
+        "stack": 586,
+        "reach": 386,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 75
+      },
+      "58": {
+        "stack": 608,
+        "reach": 396,
+        "headTubeAngle": 73.0,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 75
+      }
+    }
+  },
+  "Cube": {
+    "Litening Aero": {
+      "50": {
+        "stack": 495,
+        "reach": 366,
+        "headTubeAngle": 71.5,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "52": {
+        "stack": 515,
+        "reach": 374,
+        "headTubeAngle": 72.0,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "54": {
+        "stack": 535,
+        "reach": 382,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "56": {
+        "stack": 555,
+        "reach": 390,
+        "headTubeAngle": 73.0,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "58": {
+        "stack": 575,
+        "reach": 398,
+        "headTubeAngle": 73.5,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "60": {
+        "stack": 595,
+        "reach": 406,
+        "headTubeAngle": 74.0,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      }
+    },
+    "Litening Air": {
+      "50": {
+        "stack": 505,
+        "reach": 368,
+        "headTubeAngle": 71.5,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "52": {
+        "stack": 525,
+        "reach": 376,
+        "headTubeAngle": 72.0,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "54": {
+        "stack": 545,
+        "reach": 384,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "56": {
+        "stack": 565,
+        "reach": 392,
+        "headTubeAngle": 73.0,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "58": {
+        "stack": 585,
+        "reach": 400,
+        "headTubeAngle": 73.5,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      },
+      "60": {
+        "stack": 605,
+        "reach": 408,
+        "headTubeAngle": 74.0,
+        "seatTubeAngle": 73.0,
+        "forkLength": 390,
+        "bbDrop": 70
+      }
+    },
+    "Agree": {
+      "50": {
+        "stack": 530,
+        "reach": 369,
+        "headTubeAngle": 71.5,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "52": {
+        "stack": 550,
+        "reach": 377,
+        "headTubeAngle": 72.0,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "54": {
+        "stack": 560,
+        "reach": 381,
+        "headTubeAngle": 72.25,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "56": {
+        "stack": 570,
+        "reach": 385,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "58": {
+        "stack": 590,
+        "reach": 393,
+        "headTubeAngle": 73.0,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "60": {
+        "stack": 610,
+        "reach": 401,
+        "headTubeAngle": 73.5,
+        "seatTubeAngle": 73.5,
+        "forkLength": 395,
+        "bbDrop": 73
+      }
+    }
+  },
+  "Canyon": {
+    "Aeroad": {
+      "S": {
+        "stack": 520,
+        "reach": 375,
+        "headTubeAngle": 71.5,
+        "seatTubeAngle": 74.0,
+        "forkLength": 392,
+        "bbDrop": 70
+      },
+      "M": {
+        "stack": 545,
+        "reach": 387,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 74.0,
+        "forkLength": 392,
+        "bbDrop": 70
+      },
+      "L": {
+        "stack": 570,
+        "reach": 399,
+        "headTubeAngle": 73.5,
+        "seatTubeAngle": 74.0,
+        "forkLength": 392,
+        "bbDrop": 70
+      }
+    },
+    "Ultimate": {
+      "S": {
+        "stack": 535,
+        "reach": 372,
+        "headTubeAngle": 71.5,
+        "seatTubeAngle": 74.0,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "M": {
+        "stack": 560,
+        "reach": 384,
+        "headTubeAngle": 72.5,
+        "seatTubeAngle": 74.0,
+        "forkLength": 395,
+        "bbDrop": 73
+      },
+      "L": {
+        "stack": 585,
+        "reach": 396,
+        "headTubeAngle": 73.5,
+        "seatTubeAngle": 74.0,
+        "forkLength": 395,
+        "bbDrop": 73
+      }
+    }
+  }
+}
