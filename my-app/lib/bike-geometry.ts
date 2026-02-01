@@ -49,7 +49,6 @@ export function calculateBikeGeometry(
     reach,
     headTubeAngle,
     seatTubeAngle,
-    forkLength,
     bbDrop,
     chainstayLength,
     frontCenter,
@@ -71,11 +70,13 @@ export function calculateBikeGeometry(
   const htaRad = deg(headTubeAngle)
 
   // headTubeBottom: Ende des Steuerrohrs (Richtung des StackUp, entgegengesetzt)
-  const headTubeLen = geometry.topTubeLength ?? 0
+  const headTubeLen = geometry.headTubeLength ?? 0
   points.headTubeBottom = {
     x: points.headTubeTop.x + Math.cos(htaRad) * headTubeLen * SCALE,
     y: points.headTubeTop.y + Math.sin(htaRad) * headTubeLen * SCALE,
   }
+
+
 
 
 
@@ -99,7 +100,7 @@ export function calculateBikeGeometry(
   // Konvention: negativer Winkel = Rise (Vorbau nach oben/hinten). Ersetze durch deine Sin/Cos-Formel.
   const stemRad = deg(cockpit.stemAngle)
   const stemDx = Math.cos(Math.abs(stemRad)) * cockpit.stemLength * SCALE
-  const stemDy = Math.sin(Math.abs(stemRad)) * cockpit.stemLength * SCALE
+  const stemDy = -Math.sin(Math.abs(stemRad)) * cockpit.stemLength * SCALE
   points.stemFront = {
     x: points.spacerUp.x + stemDx,
     y: points.spacerUp.y + stemDy,
@@ -108,7 +109,34 @@ export function calculateBikeGeometry(
   // Lenkermitte: vom Vorbau-Ende um Lenker-Reach (vorwärts) und Drop (nach unten)
   points.handlebarCenter = {
     x: points.stemFront.x + cockpit.handlebarReach * SCALE,
-    y: points.stemFront.y + cockpit.handlebarDrop * SCALE,
+    y: points.stemFront.y,
+  }
+
+  // Halbkreis-förmiger Lenker von `handlebarCenter` nach unten um `handlebarDrop`
+  const hbDrop = (cockpit.handlebarDrop || 0) * SCALE
+  if (Math.abs(hbDrop) > 0.001) {
+    const hbX = points.handlebarCenter.x
+    const hbY = points.handlebarCenter.y
+    const r = Math.abs(hbDrop) / 2
+    const cx = hbX
+    const cy = hbY + Math.sign(hbDrop) * r
+    const steps = 12
+    const arcIds: string[] = []
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      const theta = -Math.PI / 2 + t * Math.PI // -90° -> +90°
+      const x = cx + r * Math.cos(theta)
+      const y = cy + r * Math.sin(theta)
+      const id = `handlebarArc${i}`
+      // @ts-ignore dynamic assignment
+      points[id] = { x, y }
+      arcIds.push(id)
+    }
+    // Verbinde handlebarCenter -> erster Arc-Punkt und alle Arc-Punkte untereinander
+    segments.push({ from: 'handlebarCenter', to: arcIds[0] })
+    for (let i = 0; i < arcIds.length - 1; i++) {
+      segments.push({ from: arcIds[i], to: arcIds[i + 1] })
+    }
   }
 
   // ─── 5) Sattelrohr-Oberkante (Seat Tube Top) – Sitzrohrwinkel ───────────────
@@ -154,7 +182,8 @@ export function calculateBikeGeometry(
     { from: 'bb', to: 'seatTubeTop' },
     { from: 'seatTubeTop', to: 'rearWheel' },
     { from: 'bb', to: 'rearWheel' },
-    { from: 'headTubeTop', to: 'stemFront' },
+    { from: 'headTubeTop', to: 'spacerUp' },
+    { from: 'spacerUp', to: 'stemFront' },
     { from: 'stemFront', to: 'handlebarCenter' },
     // zusätzliche Linie: Oberkante Sattelrohr -> Oberkante Steuerrohr
     { from: 'seatTubeTop', to: 'headTubeTop' }
