@@ -3,6 +3,7 @@ export type BikeGeometry = {
   reach: number
   headTubeAngle: number
   seatTubeAngle: number
+  forkLength: number
   bbDrop: number
   headTubeLength: number
   chainstayLength?: number
