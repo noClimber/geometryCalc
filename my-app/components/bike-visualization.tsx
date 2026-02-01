@@ -25,6 +25,8 @@ export function BikeVisualization({
   const [viewState, setViewState] = useState({ zoom: 1, pan: { x: 0, y: 0 } })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [measurePoints, setMeasurePoints] = useState<Array<{id: string, bike: 'A' | 'B'}>>([])
+  const [measureMode, setMeasureMode] = useState(false)
   const svgRef = useRef<SVGSVGElement>(null)
 
   const { zoom, pan } = viewState
@@ -85,6 +87,16 @@ export function BikeVisualization({
     setIsDragging(false)
   }
 
+  const handleSvgClick = (e: MouseEvent<SVGSVGElement>) => {
+    if (measureMode && measurePoints.length === 2) {
+      // Nur zurücksetzen wenn auf Hintergrund geklickt (nicht auf Punkt)
+      const target = e.target as SVGElement
+      if (target.tagName === 'svg' || target.tagName === 'g') {
+        setMeasurePoints([])
+      }
+    }
+  }
+
   const geometryA: BikeGeometryResult | null = bikeA
     ? calculateBikeGeometry(bikeA, alignmentMode)
     : null
@@ -114,12 +126,53 @@ export function BikeVisualization({
   const width = maxX - minX
   const height = maxY - minY
 
+  // Berechne Messlinie und Distanz
+  let measureDistance = 0
+  let measureDx = 0
+  let measureDy = 0
+  let measureLine: { x1: number; y1: number; x2: number; y2: number } | null = null
+  if (measurePoints.length === 2) {
+    const pt1 = measurePoints[0]
+    const pt2 = measurePoints[1]
+    const geom1 = pt1.bike === 'A' ? geometryA : geometryB
+    const geom2 = pt2.bike === 'A' ? geometryA : geometryB
+    
+    if (geom1 && geom2) {
+      const p1 = geom1.points[pt1.id]
+      const p2 = geom2.points[pt2.id]
+      if (p1 && p2) {
+        const dx = p2.x - p1.x
+        const dy = p2.y - p1.y
+        const distPx = Math.sqrt(dx * dx + dy * dy)
+        measureDistance = distPx / SCALE // zurück in mm
+        measureDx = dx / SCALE // X-Komponente in mm
+        measureDy = dy / SCALE // Y-Komponente in mm
+        measureLine = { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }
+      }
+    }
+  }
+
   const renderBike = (
     result: BikeGeometryResult,
     color: string,
-    opacity: number
+    opacity: number,
+    bikeId: 'A' | 'B'
   ) => {
     const { points, segments } = result
+
+    const handlePointClick = (id: string) => {
+      if (!measureMode) return
+      setMeasurePoints((prev) => {
+        const existing = prev.find((p) => p.id === id && p.bike === bikeId)
+        if (existing) {
+          return prev.filter((p) => !(p.id === id && p.bike === bikeId))
+        }
+        if (prev.length >= 2) {
+          return [{id, bike: bikeId}]
+        }
+        return [...prev, {id, bike: bikeId}]
+      })
+    }
 
     return (
       <g>
@@ -176,14 +229,20 @@ export function BikeVisualization({
         {KEY_POINT_IDS.map((id) => {
           const p = points[id]
           if (!p) return null
+          const isSelected = measurePoints.some((mp) => mp.id === id && mp.bike === bikeId)
           return (
             <circle
               key={id}
               cx={p.x}
               cy={p.y}
-              r="4"
-              fill={color}
+              r={isSelected ? "6" : "4"}
+              fill={isSelected ? "#f39c12" : color}
               opacity={opacity}
+              style={{ cursor: measureMode ? 'pointer' : 'default', pointerEvents: measureMode ? 'all' : 'none' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handlePointClick(id)
+              }}
             />
           )
         })}
@@ -227,18 +286,103 @@ export function BikeVisualization({
         {/* Bike visualization */}
         <svg
           ref={svgRef}
+          onClick={handleSvgClick}
+          style={{ pointerEvents: measureMode ? 'all' : 'none' }}
           className="absolute inset-0 w-full h-full pointer-events-none"
           viewBox={`${minX} ${minY} ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
         >
           <g transform={`translate(${pan.x / zoom}, ${pan.y / zoom}) scale(${zoom})`}>
-            {geometryA && renderBike(geometryA, '#e74c3c', 0.7)}
-            {geometryB && renderBike(geometryB, '#3498db', 0.7)}
+            {geometryA && renderBike(geometryA, '#e74c3c', 0.7, 'A')}
+            {geometryB && renderBike(geometryB, '#3498db', 0.7, 'B')}
+            
+            {/* Messlinie */}
+            {measureLine && (
+              <g>
+                {/* Hauptlinie (Hypotenuse) */}
+                <line
+                  x1={measureLine.x1}
+                  y1={measureLine.y1}
+                  x2={measureLine.x2}
+                  y2={measureLine.y2}
+                  stroke="#f39c12"
+                  strokeWidth="2"
+                  strokeDasharray="5,5"
+                />
+                <text
+                  x={(measureLine.x1 + measureLine.x2) / 2}
+                  y={(measureLine.y1 + measureLine.y2) / 2 - 10}
+                  fill="#f39c12"
+                  fontSize="14"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  {measureDistance.toFixed(1)} mm
+                </text>
+
+                {/* Horizontale Linie (ΔX) */}
+                <line
+                  x1={measureLine.x1}
+                  y1={measureLine.y2}
+                  x2={measureLine.x2}
+                  y2={measureLine.y2}
+                  stroke="#3498db"
+                  strokeWidth="1.5"
+                  strokeDasharray="3,3"
+                />
+                <text
+                  x={(measureLine.x1 + measureLine.x2) / 2}
+                  y={measureLine.y2 + 20}
+                  fill="#3498db"
+                  fontSize="12"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  ΔX: {measureDx.toFixed(1)} mm
+                </text>
+
+                {/* Vertikale Linie (ΔY) */}
+                <line
+                  x1={measureLine.x1}
+                  y1={measureLine.y1}
+                  x2={measureLine.x1}
+                  y2={measureLine.y2}
+                  stroke="#e74c3c"
+                  strokeWidth="1.5"
+                  strokeDasharray="3,3"
+                />
+                <text
+                  x={measureLine.x1 - 20}
+                  y={(measureLine.y1 + measureLine.y2) / 2}
+                  fill="#e74c3c"
+                  fontSize="12"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                >
+                  ΔY: {measureDy.toFixed(1)} mm
+                </text>
+              </g>
+            )}
           </g>
         </svg>
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3 space-y-2">
+          {/* Measure Mode Toggle */}
+          <button
+            onClick={() => {
+              setMeasureMode(!measureMode)
+              setMeasurePoints([])
+            }}
+            className={`w-full px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              measureMode
+                ? 'bg-[#f39c12] text-white'
+                : 'bg-muted hover:bg-muted/80'
+            }`}
+          >
+            {measureMode ? '📏 Messmodus aktiv' : '📏 Messmodus'}
+          </button>
+          
           {bikeA && (
             <div className="flex items-center gap-2 text-sm">
               <div className="w-4 h-4 rounded-full bg-[#e74c3c]" />

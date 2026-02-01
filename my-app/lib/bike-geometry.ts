@@ -23,6 +23,10 @@ export const KEY_POINT_IDS = [
   'handlebarCenter',
   'seatTubeTop',
   'headTubeBottom',
+  'spacerUp',
+  'frontWheel',
+  'rearWheel',
+  'seatPostTop',
 ] as const
 
 export const SCALE = 0.8 // mm → SVG-Einheiten
@@ -174,6 +178,25 @@ export function calculateBikeGeometry(
       y: wheelY, 
     }
 
+    const seatPostTopLen = 250 * SCALE
+    points.seatPostTop = {
+    x: -Math.cos(staRad) * seatPostTopLen + points.seatTubeTop.x,
+    y: -Math.sin(staRad) * seatPostTopLen + points.seatTubeTop.y,
+    }
+
+    const saddleSetback = 20 * SCALE
+
+    const saddleLen = 255 * SCALE
+    points.saddleLenFwd = {
+    x: points.seatPostTop.x + saddleLen / 2 - saddleSetback,
+    y: points.seatPostTop.y,
+    }
+
+    points.saddleLenAft = {
+    x: points.saddleLenFwd.x - saddleLen,
+    y: points.saddleLenFwd.y,
+    }
+
   // ─── Segmente (Linien) – Rahmen + Cockpit ───────────────────────────────────
   segments.push(
     { from: 'bb', to: 'headTubeTop' },
@@ -185,7 +208,8 @@ export function calculateBikeGeometry(
     { from: 'headTubeTop', to: 'spacerUp' },
     { from: 'spacerUp', to: 'stemFront' },
     { from: 'stemFront', to: 'handlebarCenter' },
-    // zusätzliche Linie: Oberkante Sattelrohr -> Oberkante Steuerrohr
+    { from: 'seatTubeTop', to: 'seatPostTop' },
+    { from: 'saddleLenFwd', to: 'saddleLenAft' },
     { from: 'seatTubeTop', to: 'headTubeTop' }
   )
 
