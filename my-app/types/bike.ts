@@ -5,6 +5,9 @@ export type BikeGeometry = {
   seatTubeAngle: number
   forkLength: number
   bbDrop: number
+  topTubeLength: number
+  chainstayLength?: number
+  frontCenter?: number
 }
 
 export type CockpitSetup = {

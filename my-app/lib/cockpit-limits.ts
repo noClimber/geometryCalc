@@ -2,12 +2,12 @@ import type { CockpitSetup } from '@/types/bike'
 
 /** Min/Max-Grenzwerte pro Cockpit-Feld (mm bzw. Grad). */
 export const COCKPIT_LIMITS: Record<keyof CockpitSetup, { min: number; max: number; step?: number }> = {
-  spacerHeight:   { min: 0,   max: 50,  step: 1 },  // Spacerhöhe (mm)
-  headsetCap:     { min: 0,   max: 15,  step: 1 },  // Steuersatzabdeckung (mm)
-  stemLength:     { min: 40,  max: 150, step: 1 }, // Vorbaulänge (mm)
-  stemAngle:      { min: -25, max: 25,  step: 1 }, // Vorbauwinkel (Grad)
-  handlebarReach: { min: 50,  max: 100, step: 1 },  // Lenker Reach (mm)
-  handlebarDrop:  { min: 100, max: 160, step: 1 }, // Lenker Drop (mm)
+  spacerHeight:   { min: 0,   max: 5000,  step: 10 },  // Spacerhöhe (mm)
+  headsetCap:     { min: 0,   max: 15,  step: 10 },  // Steuersatzabdeckung (mm)
+  stemLength:     { min: 40,  max: 1500, step: 10 }, // Vorbaulänge (mm)
+  stemAngle:      { min: -25, max: 25,  step: 10 }, // Vorbauwinkel (Grad)
+  handlebarReach: { min: 50,  max: 100, step: 10 },  // Lenker Reach (mm)
+  handlebarDrop:  { min: 100, max: 160, step: 10 }, // Lenker Drop (mm)
 }
 
 /**

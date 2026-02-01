@@ -7,15 +7,21 @@
         "headTubeAngle": 72.5,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 72
+        "bbDrop": 72,
+        "topTubeLength": 165,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "56": {
         "stack": 563,
         "reach": 393,
-        "headTubeAngle": 73.0,
+        "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 72
+        "bbDrop": 72,
+        "topTubeLength": 200,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "58": {
         "stack": 586,
@@ -23,17 +29,23 @@
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 72
+        "bbDrop": 72,
+        "topTubeLength": 250,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     },
     "Roubaix": {
       "54": {
         "stack": 564,
         "reach": 376,
-        "headTubeAngle": 72.0,
+        "headTubeAngle": 72,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 75
+        "bbDrop": 75,
+        "topTubeLength": 386,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "56": {
         "stack": 586,
@@ -41,15 +53,21 @@
         "headTubeAngle": 72.5,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 75
+        "bbDrop": 75,
+        "topTubeLength": 396,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "58": {
         "stack": 608,
         "reach": 396,
-        "headTubeAngle": 73.0,
+        "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 75
+        "bbDrop": 75,
+        "topTubeLength": 406,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     }
   },
@@ -59,49 +77,67 @@
         "stack": 495,
         "reach": 366,
         "headTubeAngle": 71.5,
-        "seatTubeAngle": 73.0,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 376,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "52": {
         "stack": 515,
         "reach": 374,
-        "headTubeAngle": 72.0,
-        "seatTubeAngle": 73.0,
+        "headTubeAngle": 72,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 384,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "54": {
         "stack": 535,
         "reach": 382,
         "headTubeAngle": 72.5,
-        "seatTubeAngle": 73.0,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 392,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "56": {
         "stack": 555,
         "reach": 390,
-        "headTubeAngle": 73.0,
-        "seatTubeAngle": 73.0,
+        "headTubeAngle": 73,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 400,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "58": {
         "stack": 575,
         "reach": 398,
         "headTubeAngle": 73.5,
-        "seatTubeAngle": 73.0,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 408,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "60": {
         "stack": 595,
         "reach": 406,
-        "headTubeAngle": 74.0,
-        "seatTubeAngle": 73.0,
+        "headTubeAngle": 74,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 416,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     },
     "Litening Air": {
@@ -109,49 +145,67 @@
         "stack": 505,
         "reach": 368,
         "headTubeAngle": 71.5,
-        "seatTubeAngle": 73.0,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 378,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "52": {
         "stack": 525,
         "reach": 376,
-        "headTubeAngle": 72.0,
-        "seatTubeAngle": 73.0,
+        "headTubeAngle": 72,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 386,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "54": {
         "stack": 545,
         "reach": 384,
         "headTubeAngle": 72.5,
-        "seatTubeAngle": 73.0,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 394,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "56": {
         "stack": 565,
         "reach": 392,
-        "headTubeAngle": 73.0,
-        "seatTubeAngle": 73.0,
+        "headTubeAngle": 73,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 402,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "58": {
         "stack": 585,
         "reach": 400,
         "headTubeAngle": 73.5,
-        "seatTubeAngle": 73.0,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 410,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "60": {
         "stack": 605,
         "reach": 408,
-        "headTubeAngle": 74.0,
-        "seatTubeAngle": 73.0,
+        "headTubeAngle": 74,
+        "seatTubeAngle": 73,
         "forkLength": 390,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 418,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     },
     "Agree": {
@@ -161,15 +215,21 @@
         "headTubeAngle": 71.5,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 379,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "52": {
         "stack": 550,
         "reach": 377,
-        "headTubeAngle": 72.0,
+        "headTubeAngle": 72,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 387,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "54": {
         "stack": 560,
@@ -177,7 +237,10 @@
         "headTubeAngle": 72.25,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 391,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "56": {
         "stack": 570,
@@ -185,15 +248,21 @@
         "headTubeAngle": 72.5,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 395,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "58": {
         "stack": 590,
         "reach": 393,
-        "headTubeAngle": 73.0,
+        "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 403,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "60": {
         "stack": 610,
@@ -201,7 +270,10 @@
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73.5,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 411,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     }
   },
@@ -211,25 +283,34 @@
         "stack": 520,
         "reach": 375,
         "headTubeAngle": 71.5,
-        "seatTubeAngle": 74.0,
+        "seatTubeAngle": 74,
         "forkLength": 392,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 385,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "M": {
         "stack": 545,
         "reach": 387,
         "headTubeAngle": 72.5,
-        "seatTubeAngle": 74.0,
+        "seatTubeAngle": 74,
         "forkLength": 392,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 397,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "L": {
         "stack": 570,
         "reach": 399,
         "headTubeAngle": 73.5,
-        "seatTubeAngle": 74.0,
+        "seatTubeAngle": 74,
         "forkLength": 392,
-        "bbDrop": 70
+        "bbDrop": 70,
+        "topTubeLength": 409,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     },
     "Ultimate": {
@@ -237,25 +318,34 @@
         "stack": 535,
         "reach": 372,
         "headTubeAngle": 71.5,
-        "seatTubeAngle": 74.0,
+        "seatTubeAngle": 74,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 382,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "M": {
         "stack": 560,
         "reach": 384,
         "headTubeAngle": 72.5,
-        "seatTubeAngle": 74.0,
+        "seatTubeAngle": 74,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 394,
+        "chainstayLength": 410,
+        "frontCenter": 600
       },
       "L": {
         "stack": 585,
         "reach": 396,
         "headTubeAngle": 73.5,
-        "seatTubeAngle": 74.0,
+        "seatTubeAngle": 74,
         "forkLength": 395,
-        "bbDrop": 73
+        "bbDrop": 73,
+        "topTubeLength": 406,
+        "chainstayLength": 410,
+        "frontCenter": 600
       }
     }
   }

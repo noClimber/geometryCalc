@@ -1,6 +1,13 @@
 'use client'
 
 import type { BikeData, AlignmentMode } from '@/types/bike'
+import {
+  calculateBikeGeometry,
+  type BikeGeometryResult,
+  WHEEL_POINT_IDS,
+  KEY_POINT_IDS,
+  SCALE,
+} from '@/lib/bike-geometry'
 import { Card } from '@/components/ui/card'
 import { useState, useRef, type MouseEvent, type WheelEvent } from 'react'
 
@@ -78,53 +85,16 @@ export function BikeVisualization({
     setIsDragging(false)
   }
 
-  // Simple coordinate calculation for visualization
-  // In a real app, this would include proper trigonometry
-  const calculateBikePoints = (bike: BikeData | null) => {
-    if (!bike) return null
+  const geometryA: BikeGeometryResult | null = bikeA
+    ? calculateBikeGeometry(bikeA, alignmentMode)
+    : null
+  const geometryB: BikeGeometryResult | null = bikeB
+    ? calculateBikeGeometry(bikeB, alignmentMode)
+    : null
 
-    const scale = 0.8
-    const { reach, stack, headTubeAngle, bbDrop, forkLength } = bike.geometry
-
-    // BB (bottom bracket) at origin for 'bb' mode
-    const bbX = 0
-    const bbY = 0
-
-    // Head tube top
-    const htX = reach * scale
-    const htY = -stack * scale
-
-    // Seat tube top (approximation)
-    const stX = -50 * scale
-    const stY = -(stack + 100) * scale
-
-    // Fork bottom (wheel axle)
-    const headAngleRad = (headTubeAngle * Math.PI) / 180
-    const forkOffsetX = Math.sin(headAngleRad) * forkLength * scale
-    const forkOffsetY = Math.cos(headAngleRad) * forkLength * scale
-    const fwX = htX + forkOffsetX
-    const fwY = htY + forkOffsetY
-
-    // Rear wheel (approximation - behind BB)
-    const rwX = -400 * scale
-    const rwY = bbDrop * scale
-
-    return {
-      bb: { x: bbX, y: bbY },
-      headTube: { x: htX, y: htY },
-      seatTube: { x: stX, y: stY },
-      frontWheel: { x: fwX, y: fwY },
-      rearWheel: { x: rwX, y: rwY },
-    }
-  }
-
-  const pointsA = calculateBikePoints(bikeA)
-  const pointsB = calculateBikePoints(bikeB)
-
-  // Calculate viewBox to fit both bikes
   const allPoints = [
-    ...(pointsA ? Object.values(pointsA) : []),
-    ...(pointsB ? Object.values(pointsB) : []),
+    ...(geometryA ? Object.values(geometryA.points) : []),
+    ...(geometryB ? Object.values(geometryB.points) : []),
   ]
 
   if (allPoints.length === 0) {
@@ -145,85 +115,78 @@ export function BikeVisualization({
   const height = maxY - minY
 
   const renderBike = (
-    points: NonNullable<ReturnType<typeof calculateBikePoints>>,
+    result: BikeGeometryResult,
     color: string,
     opacity: number
   ) => {
-    const { bb, headTube, seatTube, frontWheel, rearWheel } = points
+    const { points, segments } = result
 
     return (
       <g>
-        {/* Frame lines */}
-        <line
-          x1={bb.x}
-          y1={bb.y}
-          x2={headTube.x}
-          y2={headTube.y}
-          stroke={color}
-          strokeWidth="2"
-          opacity={opacity}
-        />
-        <line
-          x1={bb.x}
-          y1={bb.y}
-          x2={seatTube.x}
-          y2={seatTube.y}
-          stroke={color}
-          strokeWidth="2"
-          opacity={opacity}
-        />
-        <line
-          x1={seatTube.x}
-          y1={seatTube.y}
-          x2={rearWheel.x}
-          y2={rearWheel.y}
-          stroke={color}
-          strokeWidth="2"
-          opacity={opacity}
-        />
-        <line
-          x1={headTube.x}
-          y1={headTube.y}
-          x2={frontWheel.x}
-          y2={frontWheel.y}
-          stroke={color}
-          strokeWidth="2"
-          opacity={opacity}
-        />
-        <line
-          x1={bb.x}
-          y1={bb.y}
-          x2={rearWheel.x}
-          y2={rearWheel.y}
-          stroke={color}
-          strokeWidth="2"
-          opacity={opacity}
-        />
+        {/* Linien aus Segmenten (Rahmen, Cockpit, später Fahrer/Hinterbau) */}
+        {segments.map(({ from, to }) => {
+          const a = points[from]
+          const b = points[to]
+          if (!a || !b) return null
+          return (
+            <line
+              key={`${from}-${to}`}
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke={color}
+              strokeWidth="2"
+              opacity={opacity}
+            />
+          )
+        })}
 
-        {/* Wheels */}
-        <circle
-          cx={frontWheel.x}
-          cy={frontWheel.y}
-          r="27"
-          stroke={color}
-          strokeWidth="2"
-          fill="none"
-          opacity={opacity}
-        />
-        <circle
-          cx={rearWheel.x}
-          cy={rearWheel.y}
-          r="27"
-          stroke={color}
-          strokeWidth="2"
-          fill="none"
-          opacity={opacity}
-        />
+        {/* Räder: Außendurchmesser 690mm, Felgendurchmesser 622mm (skaliert) */}
+        {WHEEL_POINT_IDS.map((id) => {
+          const p = points[id]
+          if (!p) return null
+          const outerRadius = (690 / 2) * SCALE // mm -> SVG units
+          const rimRadius = (622 / 2) * SCALE // mm -> SVG units
+          return (
+            <g key={id}>
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={outerRadius}
+                stroke={color}
+                strokeWidth="2"
+                fill="none"
+                opacity={opacity}
+              />
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={rimRadius}
+                stroke={color}
+                strokeWidth="1"
+                fill="none"
+                opacity={Math.max(0.2, opacity - 0.1)}
+              />
+            </g>
+          )
+        })}
 
-        {/* Key points */}
-        <circle cx={bb.x} cy={bb.y} r="4" fill={color} opacity={opacity} />
-        <circle cx={headTube.x} cy={headTube.y} r="4" fill={color} opacity={opacity} />
-        <circle cx={seatTube.x} cy={seatTube.y} r="4" fill={color} opacity={opacity} />
+        {/* Key-Points (kleine Kreise) */}
+        {KEY_POINT_IDS.map((id) => {
+          const p = points[id]
+          if (!p) return null
+          return (
+            <circle
+              key={id}
+              cx={p.x}
+              cy={p.y}
+              r="4"
+              fill={color}
+              opacity={opacity}
+            />
+          )
+        })}
       </g>
     )
   }
@@ -269,8 +232,8 @@ export function BikeVisualization({
           preserveAspectRatio="xMidYMid meet"
         >
           <g transform={`translate(${pan.x / zoom}, ${pan.y / zoom}) scale(${zoom})`}>
-            {pointsA && renderBike(pointsA, '#e74c3c', 0.7)}
-            {pointsB && renderBike(pointsB, '#3498db', 0.7)}
+            {geometryA && renderBike(geometryA, '#e74c3c', 0.7)}
+            {geometryB && renderBike(geometryB, '#3498db', 0.7)}
           </g>
         </svg>
 
