@@ -77,50 +77,33 @@ export function calculateBikeGeometry(
     y: points.headTubeTop.y + Math.sin(htaRad) * headTubeLen * SCALE,
   }
 
-  // Berechne vordere Radposition:
-  // Wenn `frontCenter` gegeben ist, ist das der Abstand vom BB (Ursprung) zur Vorderradachse.
-  // Dann liegt die Y-Position immer auf -bbDrop (wie beim Hinterrad) und X wird aus Pythagoras
-  // bestimmt: frontCenter^2 = x^2 + bbDrop^2.
-  if (frontCenter) {
-    const R = frontCenter * SCALE
-    const y = -bbDrop * SCALE
-    const x = Math.sqrt(Math.max(0, R * R - y * y))
-    points.frontWheel = { x, y }
-  } else {
-    // Fallback: berechne das Vorderrad aus Gabel-Länge/-Richtung von headTubeBottom
-    // und setze die Y-Position auf -bbDrop. Die tatsächliche Gabel-Länge und der Winkel
-    // ergeben sich dann aus headTubeBottom -> frontWheel und werden nur zum Zeichnen verwendet.
-    const forkDx = Math.cos(htaRad) * forkLength * SCALE
-    const forkDy = Math.sin(htaRad) * forkLength * SCALE
-    const fx = points.headTubeBottom.x + forkDx
-    points.frontWheel = {
-      x: fx,
-      y: -bbDrop * SCALE,
-    }
-  }
+
+
+
+
 
   // ─── 4) Cockpit: Spacer + Steuersatz + Vorbau + Lenker ──────────────────────
   // Oberkante Spacer/Abdeckung (von Head Tube Top nach oben)
 
-  const stackUp = (cockpit.spacerHeight + cockpit.headsetCap + 31.8 / 2) * SCALE
-  const stackUpDx = stackUp * Math.cos(deg(headTubeAngle))
-  const stackUpDy = stackUp * Math.sin(deg(headTubeAngle));
+  const spacerUp = (cockpit.spacerHeight + cockpit.headsetCap + 31.8 / 2) * SCALE
+  const spacerUpDx = spacerUp * Math.cos(deg(headTubeAngle))
+  const spacerUpDy = spacerUp * Math.sin(deg(headTubeAngle));
 
 
-  points.stemFront = {
-    x: points.headTubeTop.x - stackUpDx,
-    y: points.headTubeTop.y - stackUpDy,
+  points.spacerUp = {
+    x: points.headTubeTop.x - spacerUpDx,
+    y: points.headTubeTop.y - spacerUpDy,
   }
 
   // Vorbau-Ende (Stem-Front): Vorbauwinkel aus der Horizontalen
   // Konvention: negativer Winkel = Rise (Vorbau nach oben/hinten). Ersetze durch deine Sin/Cos-Formel.
   const stemRad = deg(cockpit.stemAngle)
-  const stemDx = -Math.cos(Math.abs(stemRad)) * cockpit.stemLength * SCALE
-  const stemDy = -Math.sin(Math.abs(stemRad)) * cockpit.stemLength * SCALE
-  //points.stemFront = {
-  //  x: stackTop.x + stemDx,
-  //  y: stackTop.y + stemDy,
-  //}
+  const stemDx = Math.cos(Math.abs(stemRad)) * cockpit.stemLength * SCALE
+  const stemDy = Math.sin(Math.abs(stemRad)) * cockpit.stemLength * SCALE
+  points.stemFront = {
+    x: points.spacerUp.x + stemDx,
+    y: points.spacerUp.y + stemDy,
+  }
 
   // Lenkermitte: vom Vorbau-Ende um Lenker-Reach (vorwärts) und Drop (nach unten)
   points.handlebarCenter = {
@@ -143,15 +126,25 @@ export function calculateBikeGeometry(
   // horizontal hinter die Oberkante des Steuerrohrs. Optionaler kleiner Y-Offset
   // repräsentiert die Unterseite des Rohres (hier: 5 mm).
   
+    // gemeinsame Y-Position für beide Räder (wie Hinterrad)
+  const wheelY = -bbDrop * SCALE
+
+  // Front-Wheel X aus Pythagoras: frontCenter ist Hypotenuse (Abstand BB->Vorderrad).
+  // x = sqrt(frontCenter^2 - wheelY^2)
+    const frontCenterLen = (frontCenter || 600) * SCALE
+    const frontCenterLenX = Math.sqrt(Math.max(0, frontCenterLen * frontCenterLen - wheelY * wheelY))
+    points.frontWheel = { 
+      x: Math.abs(frontCenterLenX), 
+      y: wheelY, 
+    }
 
   // ─── 6) Hinterradachse – BB-Drop + Kettenstrebe ────────────────────────────
-  const chainstayLen = (chainstayLength || 410) * SCALE
-  points.rearWheel = {
-    x: -chainstayLen,
-    // bbDrop wird hier negativ gerechnet: positive Angabe bedeutet "BB unter Achse",
-    // im SVG-Koordinatensystem (Y nach unten) muss das als negativer Versatz verwendet werden.
-    y: -bbDrop * SCALE,
-  }
+    const rearWheelLen = (chainstayLength || 410) * SCALE
+    const rearWheelLenX = Math.sqrt(Math.max(0, rearWheelLen * rearWheelLen - wheelY * wheelY))
+    points.rearWheel = { 
+      x: -Math.abs(rearWheelLenX), 
+      y: wheelY, 
+    }
 
   // ─── Segmente (Linien) – Rahmen + Cockpit ───────────────────────────────────
   segments.push(
