@@ -63,6 +63,7 @@ export default function Home() {
         seatTubeAngle: 0,
         forkLength: 0,
         bbDrop: 0,
+        headTubeLength: 0,
       },
       cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }),
     }

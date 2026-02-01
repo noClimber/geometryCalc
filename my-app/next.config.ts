@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  productionBrowserSourceMaps: false,
   eslint: {
-    // Damit ignoriert Vercel ESLint-Fehler beim Build und deployt trotzdem
     ignoreDuringBuilds: true,
   },
-  productionBrowserSourceMaps: false,
+  typescript: {
+    ignoreBuildErrors: false,
+  },
 };
 
 export default nextConfig;
