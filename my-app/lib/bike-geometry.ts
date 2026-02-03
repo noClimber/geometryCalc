@@ -1,9 +1,13 @@
 import type { BikeData, AlignmentMode } from '@/types/bike'
 
+// ════════════════════════════════════════════════════════════════════════════
+// TYPES & CONSTANTS
+// ════════════════════════════════════════════════════════════════════════════
+
 /** 2D-Punkt in SVG-Koordinaten (X rechts, Y nach unten). */
 export type Point2D = { x: number; y: number }
 
-/** Verbindung zwischen zwei Punkten (für Linien). */
+/** Verbindung zwischen zwei Punkten (für Linien im SVG). */
 export type Segment = { from: string; to: string }
 
 /** Ergebnis der Rahmen-/Cockpit-Berechnung: alle Punkte + Linien-Segmente. */
@@ -12,10 +16,10 @@ export type BikeGeometryResult = {
   segments: Segment[]
 }
 
-/** Punkt-IDs, die als Räder gezeichnet werden (Kreis). */
+/** Punkt-IDs, die als Räder gezeichnet werden (Kreise). */
 export const WHEEL_POINT_IDS = ['frontWheel', 'rearWheel'] as const
 
-/** Punkt-IDs für hervorgehobene Key-Points (kleiner Kreis). */
+/** Punkt-IDs für hervorgehobene Key-Points (kleine Kreise). */
 export const KEY_POINT_IDS = [
   'bb',
   'headTubeTop',
@@ -31,19 +35,58 @@ export const KEY_POINT_IDS = [
   'pedalLeft',
 ] as const
 
-export const SCALE = 0.8 // mm → SVG-Einheiten
+// Skalierungsfaktor: mm → SVG-Einheiten
+export const SCALE = 0.8
 
-/** Grad → Bogenmaß */
-function deg(angle: number): number {
-  return (angle * Math.PI) / 180
+// Default-Werte für fehlende Geometriedaten
+const DEFAULT_FRONT_CENTER = 600
+const DEFAULT_CHAINSTAY_LENGTH = 410
+const DEFAULT_HEADTUBE_LENGTH = 0
+
+// Cockpit-Konstanten
+const HEADSET_BEARING_DIAMETER = 31.8 // mm
+const HANDLEBAR_ARC_STEPS = 12
+
+// Sattel & Sattelstütze
+const SEATPOST_LENGTH = 250 // mm
+const SADDLE_LENGTH = 255 // mm
+const SADDLE_SETBACK = 20 // mm
+
+// Pedale
+const PEDAL_WIDTH = 50 // mm (Gesamt-Breite der Pedal-Anzeige)
+
+// ════════════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ════════════════════════════════════════════════════════════════════════════
+
+/** Konvertiert Grad in Bogenmaß (Radiant). */
+function toRadians(degrees: number): number {
+  return (degrees * Math.PI) / 180
 }
 
+/** 
+ * Berechnet horizontale Distanz aus Hypotenuse und vertikalem Offset.
+ * Verwendet den Satz des Pythagoras: x = sqrt(hypotenuse² - y²)
+ */
+function calculateHorizontalDistance(hypotenuse: number, verticalOffset: number): number {
+  return Math.sqrt(Math.max(0, hypotenuse * hypotenuse - verticalOffset * verticalOffset))
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MAIN CALCULATION FUNCTION
+// ════════════════════════════════════════════════════════════════════════════
+
 /**
- * Berechnet alle Punkte und Segmente für ein Bike (Rahmen + Cockpit).
- * Koordinatensystem: BB im Ursprung, X nach rechts (vorn), Y nach unten (SVG).
- *
- * Du kannst die einzelnen Berechnungsblöcke durch deine eigenen Sin/Cos-Formeln ersetzen.
- * Später erweiterbar um: Fahrer, Hinterbau-Details, etc. (einfach weitere Punkte + Segmente anhängen).
+ * Berechnet alle geometrischen Punkte und Verbindungslinien für ein Fahrrad.
+ * 
+ * Koordinatensystem:
+ * - Ursprung (0,0) = Tretlager (Bottom Bracket)
+ * - X-Achse: rechts = vorn (positiv)
+ * - Y-Achse: unten (positiv, SVG-Standard)
+ * 
+ * @param bike - Fahrrad-Daten (Geometrie + Cockpit-Setup)
+ * @param alignmentMode - Ausrichtungsmodus (aktuell nicht verwendet)
+ * @returns Objekt mit allen berechneten Punkten und Segmenten
  */
 export function calculateBikeGeometry(
   bike: BikeData,
@@ -56,203 +99,250 @@ export function calculateBikeGeometry(
     headTubeAngle,
     seatTubeAngle,
     bbDrop,
-    chainstayLength,
-    frontCenter,
+    chainstayLength = DEFAULT_CHAINSTAY_LENGTH,
+    frontCenter = DEFAULT_FRONT_CENTER,
   } = geometry
 
   const points: Record<string, Point2D> = {}
   const segments: Segment[] = []
 
-  // ─── 1) Tretlager (BB) – Referenzpunkt ─────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
+  // 1. RAHMEN-BASIS-PUNKTE
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // Tretlager = Koordinaten-Ursprung
   points.bb = { x: 0, y: 0 }
 
-  // ─── 2) Oberkante Steuerrohr (Head Tube Top) – Stack/Reach ───────────────────
+  // Oberkante Steuerrohr (aus Stack/Reach definiert)
   points.headTubeTop = {
     x: reach * SCALE,
     y: -stack * SCALE,
   }
 
-  // ─── 3) Vorderradachse (Fork-Ende) – Lenkkopfwinkel + Gabelänge ─────────────
-  const htaRad = deg(headTubeAngle)
-
-  // headTubeBottom: Ende des Steuerrohrs (Richtung des StackUp, entgegengesetzt)
-  const headTubeLen = geometry.headTubeLength ?? 0
+  // Unterkante Steuerrohr (entlang Lenkkopfwinkel)
+  const headTubeAngleRad = toRadians(headTubeAngle)
+  const headTubeLen = (geometry.headTubeLength ?? DEFAULT_HEADTUBE_LENGTH) * SCALE
   points.headTubeBottom = {
-    x: points.headTubeTop.x + Math.cos(htaRad) * headTubeLen * SCALE,
-    y: points.headTubeTop.y + Math.sin(htaRad) * headTubeLen * SCALE,
+    x: points.headTubeTop.x + Math.cos(headTubeAngleRad) * headTubeLen,
+    y: points.headTubeTop.y + Math.sin(headTubeAngleRad) * headTubeLen,
   }
 
+  // Oberkante Sattelrohr (entlang Sitzrohrwinkel)
+  const seatTubeAngleRad = toRadians(seatTubeAngle)
+  const seatTubeLength = geometry.seatTubeLength * SCALE
+  points.seatTubeTop = {
+    x: -Math.cos(seatTubeAngleRad) * seatTubeLength,
+    y: -Math.sin(seatTubeAngleRad) * seatTubeLength,
+  }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // 2. LAUFRÄDER
+  // ──────────────────────────────────────────────────────────────────────────
 
+  // Gemeinsame Y-Position beider Räder (BB-Drop bestimmt die Höhe)
+  const wheelY = -bbDrop * SCALE
 
+  // Vorderrad (aus Front Center berechnet)
+  const frontCenterScaled = frontCenter * SCALE
+  const frontWheelX = calculateHorizontalDistance(frontCenterScaled, wheelY)
+  points.frontWheel = {
+    x: Math.abs(frontWheelX),
+    y: wheelY,
+  }
 
+  // Hinterrad (aus Kettenstreben-Länge berechnet)
+  const chainstayScaled = chainstayLength * SCALE
+  const rearWheelX = calculateHorizontalDistance(chainstayScaled, wheelY)
+  points.rearWheel = {
+    x: -Math.abs(rearWheelX),
+    y: wheelY,
+  }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // 3. COCKPIT (Spacer, Vorbau, Lenker)
+  // ──────────────────────────────────────────────────────────────────────────
 
-
-  // ─── 4) Cockpit: Spacer + Steuersatz + Vorbau + Lenker ──────────────────────
-  // Oberkante Spacer/Abdeckung (von Head Tube Top nach oben)
-  const spacerUp = (cockpit.spacerHeight + cockpit.headsetCap + 31.8 / 2) * SCALE
-  const headTubeAngleRad = deg(headTubeAngle)
-  const spacerUpDx = spacerUp * Math.cos(headTubeAngleRad)
-  const spacerUpDy = spacerUp * Math.sin(headTubeAngleRad)
-
-
+  // Oberkante Spacer-Stack (oberhalb Steuerrohr)
+  const spacerStackHeight = (
+    cockpit.spacerHeight +
+    cockpit.headsetCap +
+    HEADSET_BEARING_DIAMETER / 2
+  ) * SCALE
+  
+  const spacerOffsetX = spacerStackHeight * Math.cos(headTubeAngleRad)
+  const spacerOffsetY = spacerStackHeight * Math.sin(headTubeAngleRad)
+  
   points.spacerUp = {
-    x: points.headTubeTop.x - spacerUpDx,
-    y: points.headTubeTop.y - spacerUpDy,
+    x: points.headTubeTop.x - spacerOffsetX,
+    y: points.headTubeTop.y - spacerOffsetY,
   }
 
-// Vorbau-Ende (Stem-Front)
-const stemRad = deg(cockpit.stemAngle)
-const stemAngleTotal = headTubeAngleRad - stemRad  // Minus hier!
+  // Vorbau-Ende (Stem Front)
+  const stemAngleRad = toRadians(cockpit.stemAngle)
+  const stemAngleTotal = headTubeAngleRad - stemAngleRad
+  const stemLengthScaled = cockpit.stemLength * SCALE
+  
+  const stemOffsetX = Math.sin(stemAngleTotal) * stemLengthScaled
+  const stemOffsetY = -Math.cos(stemAngleTotal) * stemLengthScaled
+  
+  points.stemFront = {
+    x: points.spacerUp.x + stemOffsetX,
+    y: points.spacerUp.y + stemOffsetY,
+  }
 
-const stemDx = Math.sin(stemAngleTotal) * cockpit.stemLength * SCALE
-const stemDy = -Math.cos(stemAngleTotal) * cockpit.stemLength * SCALE
-
-points.stemFront = {
-  x: points.spacerUp.x + stemDx,
-  y: points.spacerUp.y + stemDy,
-}
-
-  // Lenkermitte: vom Vorbau-Ende um Lenker-Reach (vorwärts) und Drop (nach unten)
+  // Lenkermitte (Handlebar Center)
   points.handlebarCenter = {
     x: points.stemFront.x + cockpit.handlebarReach * SCALE,
     y: points.stemFront.y,
   }
 
-  // Halbkreis-förmiger Lenker von `handlebarCenter` nach unten um `handlebarDrop`
-  const hbDrop = (cockpit.handlebarDrop || 0) * SCALE
-  if (Math.abs(hbDrop) > 0.001) {
-    const hbX = points.handlebarCenter.x
-    const hbY = points.handlebarCenter.y
-    const r = Math.abs(hbDrop) / 2
-    const cx = hbX
-    const cy = hbY + Math.sign(hbDrop) * r
-    const steps = 12
-    const arcIds: string[] = []
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps
-      const theta = -Math.PI / 2 + t * Math.PI // -90° -> +90°
-      const x = cx + r * Math.cos(theta)
-      const y = cy + r * Math.sin(theta)
-      const id = `handlebarArc${i}`
-      // @ts-ignore dynamic assignment
-      points[id] = { x, y }
-      arcIds.push(id)
-    }
-    // Verbinde handlebarCenter -> erster Arc-Punkt und alle Arc-Punkte untereinander
-    segments.push({ from: 'handlebarCenter', to: arcIds[0] })
-    for (let i = 0; i < arcIds.length - 1; i++) {
-      segments.push({ from: arcIds[i], to: arcIds[i + 1] })
-    }
+  // Lenker-Drop als Halbkreis-Bogen
+  createHandlebarArc(points, segments, cockpit.handlebarDrop)
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 4. SATTEL & SATTELSTÜTZE
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const seatPostLength = SEATPOST_LENGTH * SCALE
+  points.seatPostTop = {
+    x: points.seatTubeTop.x - Math.cos(seatTubeAngleRad) * seatPostLength,
+    y: points.seatTubeTop.y - Math.sin(seatTubeAngleRad) * seatPostLength,
   }
 
-  // ─── 5) Sattelrohr-Oberkante (Seat Tube Top) – Sitzrohrwinkel ───────────────
-  const seatTubeLength = geometry.seatTubeLength * SCALE
-  const staRad = deg(seatTubeAngle)
-  points.seatTubeTop = {
-    x: -Math.cos(staRad) * seatTubeLength,
-    y: -Math.sin(staRad) * seatTubeLength,
-  }
-
-  // ─── 5.1) Vorderes Ende des Oberrohrs (Top Tube Front)
-  // Verwende `topTubeLength` aus den Geometriedaten (ETT-ähnlich) und lege den Punkt
-  // horizontal hinter die Oberkante des Steuerrohrs. Optionaler kleiner Y-Offset
-  // repräsentiert die Unterseite des Rohres (hier: 5 mm).
+  const saddleSetback = SADDLE_SETBACK * SCALE
+  const saddleLength = SADDLE_LENGTH * SCALE
   
-    // gemeinsame Y-Position für beide Räder (wie Hinterrad)
-  const wheelY = -bbDrop * SCALE
-
-  // Front-Wheel X aus Pythagoras: frontCenter ist Hypotenuse (Abstand BB->Vorderrad).
-  // x = sqrt(frontCenter^2 - wheelY^2)
-    const frontCenterLen = (frontCenter || 600) * SCALE
-    const frontCenterLenX = Math.sqrt(Math.max(0, frontCenterLen * frontCenterLen - wheelY * wheelY))
-    points.frontWheel = { 
-      x: Math.abs(frontCenterLenX), 
-      y: wheelY, 
-    }
-
-  // ─── 6) Hinterradachse – BB-Drop + Kettenstrebe ────────────────────────────
-    const rearWheelLen = (chainstayLength || 410) * SCALE
-    const rearWheelLenX = Math.sqrt(Math.max(0, rearWheelLen * rearWheelLen - wheelY * wheelY))
-    points.rearWheel = { 
-      x: -Math.abs(rearWheelLenX), 
-      y: wheelY, 
-    }
-
-    const seatPostTopLen = 250 * SCALE
-    points.seatPostTop = {
-    x: -Math.cos(staRad) * seatPostTopLen + points.seatTubeTop.x,
-    y: -Math.sin(staRad) * seatPostTopLen + points.seatTubeTop.y,
-    }
-
-    const saddleSetback = 20 * SCALE
-
-    const saddleLen = 255 * SCALE
-    points.saddleLenFwd = {
-    x: points.seatPostTop.x + saddleLen / 2 - saddleSetback,
+  points.saddleLenFwd = {
+    x: points.seatPostTop.x + saddleLength / 2 - saddleSetback,
     y: points.seatPostTop.y,
-    }
-
-    points.saddleLenAft = {
-    x: points.saddleLenFwd.x - saddleLen,
+  }
+  
+  points.saddleLenAft = {
+    x: points.saddleLenFwd.x - saddleLength,
     y: points.saddleLenFwd.y,
-    }
+  }
 
-    // ─── Pedale (Crank + Pedal) – Länge 165mm, Winkel einstellbar ─────────────
-    const crankLength = cockpit.crankLength * SCALE
-    const pedalAngleRad = deg(cockpit.pedalAngle)
-    // zwei Pedale entgegengesetzt um das BB
-    points.pedalRight = {
-      x: points.bb.x + Math.cos(pedalAngleRad) * crankLength,
-      y: points.bb.y + Math.sin(pedalAngleRad) * crankLength,
-    }
-    points.pedalLeft = {
-      x: points.bb.x + Math.cos(pedalAngleRad + Math.PI) * crankLength,
-      y: points.bb.y + Math.sin(pedalAngleRad + Math.PI) * crankLength,
-    }
+  // ──────────────────────────────────────────────────────────────────────────
+  // 5. KURBEL & PEDALE
+  // ──────────────────────────────────────────────────────────────────────────
 
-    // Pedal-Anzeige: 50mm lange Linie, immer parallel zur Y-Achse (vertikal), zentriert am Kurbelende
-    const pedalHalf = 25 * SCALE // 50mm / 2
-    points.pedalRightTop = {
-      x: points.pedalRight.x - pedalHalf,
-      y: points.pedalRight.y,
-    }
-    points.pedalRightBottom = {
-      x: points.pedalRight.x + pedalHalf,
-      y: points.pedalRight.y,
-    }
-    points.pedalLeftTop = {
-      x: points.pedalLeft.x - pedalHalf,
-      y: points.pedalLeft.y,
-    }
-    points.pedalLeftBottom = {
-      x: points.pedalLeft.x + pedalHalf,
-      y: points.pedalLeft.y,
-    }
+  const crankLength = cockpit.crankLength * SCALE
+  const pedalAngleRad = toRadians(cockpit.pedalAngle)
 
-    
-  // ─── Segmente (Linien) – Rahmen + Cockpit ───────────────────────────────────
+  // Rechte und linke Kurbel (180° versetzt)
+  points.pedalRight = {
+    x: points.bb.x + Math.cos(pedalAngleRad) * crankLength,
+    y: points.bb.y + Math.sin(pedalAngleRad) * crankLength,
+  }
+  
+  points.pedalLeft = {
+    x: points.bb.x + Math.cos(pedalAngleRad + Math.PI) * crankLength,
+    y: points.bb.y + Math.sin(pedalAngleRad + Math.PI) * crankLength,
+  }
+
+  // Pedal-Anzeige (horizontale Linien an Kurbelenden)
+  const pedalHalfWidth = (PEDAL_WIDTH / 2) * SCALE
+  
+  points.pedalRightTop = {
+    x: points.pedalRight.x - pedalHalfWidth,
+    y: points.pedalRight.y,
+  }
+  points.pedalRightBottom = {
+    x: points.pedalRight.x + pedalHalfWidth,
+    y: points.pedalRight.y,
+  }
+  
+  points.pedalLeftTop = {
+    x: points.pedalLeft.x - pedalHalfWidth,
+    y: points.pedalLeft.y,
+  }
+  points.pedalLeftBottom = {
+    x: points.pedalLeft.x + pedalHalfWidth,
+    y: points.pedalLeft.y,
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 6. SEGMENTE (Verbindungslinien)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // Rahmen
   segments.push(
-    { from: 'bb', to: 'headTubeTop' },
-    { from: 'headTubeTop', to: 'headTubeBottom' },
-    { from: 'headTubeBottom', to: 'frontWheel' },
-    { from: 'bb', to: 'seatTubeTop' },
-    { from: 'seatTubeTop', to: 'rearWheel' },
-    { from: 'bb', to: 'rearWheel' },
-    { from: 'headTubeTop', to: 'spacerUp' },
-    { from: 'spacerUp', to: 'stemFront' },
-    { from: 'stemFront', to: 'handlebarCenter' },
-    { from: 'seatTubeTop', to: 'seatPostTop' },
-    { from: 'saddleLenFwd', to: 'saddleLenAft' },
-    { from: 'seatTubeTop', to: 'headTubeTop' },
-    { from: 'bb', to: 'pedalRight' }, 
-    { from: 'bb', to: 'pedalLeft' },        { from: 'pedalRightTop', to: 'pedalRightBottom' },
-    { from: 'pedalLeftTop', to: 'pedalLeftBottom' }
+    { from: 'bb', to: 'headTubeTop' },              // Oberrohr
+    { from: 'headTubeTop', to: 'headTubeBottom' },  // Steuerrohr
+    { from: 'headTubeBottom', to: 'frontWheel' },   // Gabel
+    { from: 'bb', to: 'seatTubeTop' },              // Sitzrohr
+    { from: 'seatTubeTop', to: 'rearWheel' },       // Sitzstrebe
+    { from: 'bb', to: 'rearWheel' },                // Kettenstrebe
+    { from: 'seatTubeTop', to: 'headTubeTop' },     // Oberrohr (alternative Darstellung)
   )
 
+  // Cockpit
+  segments.push(
+    { from: 'headTubeTop', to: 'spacerUp' },        // Spacer-Stack
+    { from: 'spacerUp', to: 'stemFront' },          // Vorbau
+    { from: 'stemFront', to: 'handlebarCenter' },   // Lenker-Extension
+  )
 
+  // Sattel & Sattelstütze
+  segments.push(
+    { from: 'seatTubeTop', to: 'seatPostTop' },     // Sattelstütze
+    { from: 'saddleLenFwd', to: 'saddleLenAft' },   // Sattel
+  )
 
+  // Kurbel & Pedale
+  segments.push(
+    { from: 'bb', to: 'pedalRight' },               // Rechte Kurbel
+    { from: 'bb', to: 'pedalLeft' },                // Linke Kurbel
+    { from: 'pedalRightTop', to: 'pedalRightBottom' },  // Rechtes Pedal
+    { from: 'pedalLeftTop', to: 'pedalLeftBottom' },    // Linkes Pedal
+  )
 
   return { points, segments }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SPECIALIZED HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Erstellt einen Halbkreis-Bogen für den Lenker-Drop.
+ * Fügt die Bogen-Punkte dynamisch zu points hinzu und verbindet sie mit Segmenten.
+ */
+function createHandlebarArc(
+  points: Record<string, Point2D>,
+  segments: Segment[],
+  handlebarDrop: number
+): void {
+  const dropScaled = handlebarDrop * SCALE
+  
+  // Nur zeichnen wenn Drop signifikant ist
+  if (Math.abs(dropScaled) < 0.001) return
+
+  const centerX = points.handlebarCenter.x
+  const centerY = points.handlebarCenter.y
+  const radius = Math.abs(dropScaled) / 2
+  const arcCenterY = centerY + Math.sign(dropScaled) * radius
+
+  const arcIds: string[] = []
+  
+  for (let i = 0; i <= HANDLEBAR_ARC_STEPS; i++) {
+    const progress = i / HANDLEBAR_ARC_STEPS
+    const angle = -Math.PI / 2 + progress * Math.PI // -90° bis +90°
+    
+    const pointId = `handlebarArc${i}`
+    // @ts-ignore - Dynamische Zuweisung von Punkt-IDs
+    points[pointId] = {
+      x: centerX + radius * Math.cos(angle),
+      y: arcCenterY + radius * Math.sin(angle),
+    }
+    arcIds.push(pointId)
+  }
+
+  // Verbinde Lenker-Mitte mit erstem Bogen-Punkt
+  segments.push({ from: 'handlebarCenter', to: arcIds[0] })
+  
+  // Verbinde alle Bogen-Punkte untereinander
+  for (let i = 0; i < arcIds.length - 1; i++) {
+    segments.push({ from: arcIds[i], to: arcIds[i + 1] })
+  }
 }
