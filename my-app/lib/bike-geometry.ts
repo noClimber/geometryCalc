@@ -89,10 +89,10 @@ export function calculateBikeGeometry(
 
   // ─── 4) Cockpit: Spacer + Steuersatz + Vorbau + Lenker ──────────────────────
   // Oberkante Spacer/Abdeckung (von Head Tube Top nach oben)
-
   const spacerUp = (cockpit.spacerHeight + cockpit.headsetCap + 31.8 / 2) * SCALE
-  const spacerUpDx = spacerUp * Math.cos(deg(headTubeAngle))
-  const spacerUpDy = spacerUp * Math.sin(deg(headTubeAngle));
+  const headTubeAngleRad = deg(headTubeAngle)
+  const spacerUpDx = spacerUp * Math.cos(headTubeAngleRad)
+  const spacerUpDy = spacerUp * Math.sin(headTubeAngleRad)
 
 
   points.spacerUp = {
@@ -100,15 +100,17 @@ export function calculateBikeGeometry(
     y: points.headTubeTop.y - spacerUpDy,
   }
 
-  // Vorbau-Ende (Stem-Front): Vorbauwinkel aus der Horizontalen
-  // Konvention: negativer Winkel = Rise (Vorbau nach oben/hinten). Ersetze durch deine Sin/Cos-Formel.
-  const stemRad = deg(cockpit.stemAngle)
-  const stemDx = Math.cos(Math.abs(stemRad)) * cockpit.stemLength * SCALE
-  const stemDy = -Math.sin(Math.abs(stemRad)) * cockpit.stemLength * SCALE
-  points.stemFront = {
-    x: points.spacerUp.x + stemDx,
-    y: points.spacerUp.y + stemDy,
-  }
+// Vorbau-Ende (Stem-Front)
+const stemRad = deg(cockpit.stemAngle)
+const stemAngleTotal = headTubeAngleRad - stemRad  // Minus hier!
+
+const stemDx = Math.sin(stemAngleTotal) * cockpit.stemLength * SCALE
+const stemDy = -Math.cos(stemAngleTotal) * cockpit.stemLength * SCALE
+
+points.stemFront = {
+  x: points.spacerUp.x + stemDx,
+  y: points.spacerUp.y + stemDy,
+}
 
   // Lenkermitte: vom Vorbau-Ende um Lenker-Reach (vorwärts) und Drop (nach unten)
   points.handlebarCenter = {
