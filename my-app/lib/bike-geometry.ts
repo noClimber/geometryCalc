@@ -71,22 +71,29 @@ const SADDLE_SETBACK = 40 // mm
 // Pedale
 const PEDAL_WIDTH = 50 // mm (Gesamt-Breite der Pedal-Anzeige)
 
-// Fahrerdaten - HINWEIS: Körpergröße, Schrittlänge, Oberkörperwinkel und Schuhdicke kommen jetzt aus bike.rider
-const UPPER_LEG_RATIO = 0.56 // Oberschenkel-Anteil an Innenbeinlänge
-const LOWER_LEG_RATIO = 1 - UPPER_LEG_RATIO // Unterschenkel-Anteil an Innenbeinlänge
+// ──────────────────────────────────────────────────────────────────────────
+// FAHRER-ANATOMIE
+// ──────────────────────────────────────────────────────────────────────────
+// HINWEIS: Körpergröße, Innenbeinlänge, Oberkörperwinkel und Schuhdicke
+// kommen aus bike.rider und werden in der Berechnung verwendet.
 
-// Oberkörper-Proportionen
-const HEAD_RATIO = 0.12 // Kopfhöhe als Anteil der Körpergröße
-const NECK_RATIO = 0.055 // Halslänge als Anteil der Körpergröße
-const HEAD_WIDTH_RATIO = 0.7 // Kopfbreite relativ zur Kopfhöhe
-const UPPER_ARM_RATIO = 0.186 // Oberarm-Länge als Anteil der Körpergröße (ca. 18.6%)
-const LOWER_ARM_RATIO = 0.146 // Unterarm-Länge als Anteil der Körpergröße (ca. 14.6%)
+// Beinlängen-Verhältnisse (prozentual zur Innenbeinlänge)
+const UPPER_LEG_RATIO = 0.56 // Oberschenkel: 56% der Innenbeinlänge
+const LOWER_LEG_RATIO = 0.44 // Unterschenkel: 44% der Innenbeinlänge
+
+// Oberkörper-Proportionen (prozentual zur Körpergröße)
+const HEAD_RATIO = 0.12      // Kopfhöhe: 12%
+const NECK_RATIO = 0.055     // Halslänge: 5.5%
+const HEAD_WIDTH_RATIO = 0.7 // Kopfbreite: 70% der Kopfhöhe
+
+// Arm-Proportionen (prozentual zur Körpergröße)
+const UPPER_ARM_RATIO = 0.186 // Oberarm: 18.6%
+const LOWER_ARM_RATIO = 0.146 // Unterarm: 14.6%
 
 // Schuh & Cleat (Kontaktpunkt Fuß-Pedal)
-const CLEAT_SETBACK = 130 // mm (Abstand Pedalachse → Fußballen, nach hinten)
-const FOOT_ANGLE_DEFAULT = 10 // Grad (Standard-Fußwinkel, leicht nach unten)
-
-const SHOE_EXT_AFT = 20 // mm (Wie weit über den Cleat hinaus zeigt der Schuh nach hinten?)
+const CLEAT_SETBACK = 130        // mm - Abstand Pedalachse → Fußballen (nach hinten)
+const FOOT_ANGLE_DEFAULT = 10    // Grad - Standard-Fußwinkel (leicht nach unten)
+const SHOE_EXT_AFT = 20          // mm - Schuh-Verlängerung hinter Cleat (aktuell ungenutzt)
 
 // ════════════════════════════════════════════════════════════════════════════
 // Kniewinkel-Schwellen (können bei Bedarf angepasst werden)
@@ -117,15 +124,19 @@ function calculateHorizontalDistance(hypotenuse: number, verticalOffset: number)
 
 /**
  * Berechnet den Kniewinkel für einen spezifischen Pedalwinkel.
- * @param pedalAngleDeg - Pedalwinkel in Grad
+ * 
+ * Verwendet inverse Kinematik (IK) um die Position von Knie und Hüfte zu berechnen,
+ * basierend auf den anatomischen Beinlängen (Innenbeinlänge + Hüftgelenk-Offset).
+ * 
+ * @param pedalAngleDeg - Pedalwinkel in Grad (0° = vorne, 90° = unten, 180° = hinten, 270° = oben)
  * @param crankLength - Kurbellänge in mm
- * @param seatPos - Position des Sattels
- * @param bbPos - Position des Tretlagers
- * @param riderInseam - Schrittlänge des Fahrers in mm
- * @param cleatDrop - Schuhdicke in mm
- * @param hipJointOffsetScaled - Offset vom Sattel zum Hüftgelenk (bereits skaliert)
- * @param torsoAngleRad - Oberkörperwinkel in Radiant
- * @returns Kniewinkel in Grad
+ * @param seatPos - Position des Sattels (Sattel-Mittelpunkt)
+ * @param bbPos - Position des Tretlagers (Bottom Bracket)
+ * @param riderInseam - Innenbeinlänge des Fahrers in mm
+ * @param cleatDrop - Schuhdicke in mm (Pedalachse → Fußsohle)
+ * @param hipJointOffsetScaled - Offset vom Sattel zum Hüftgelenk in SVG-Einheiten (bereits skaliert)
+ * @param torsoAngleRad - Oberkörperwinkel in Radiant (relativ zur Horizontalen)
+ * @returns Kniewinkel in Grad (Innenwinkel zwischen Unter- und Oberschenkel)
  */
 function calculateKneeAngleAtPedalAngle(
   pedalAngleDeg: number,
@@ -253,11 +264,13 @@ export function calculateBikeGeometry(
     frontCenter = DEFAULT_FRONT_CENTER,
   } = geometry
 
-  // Fahrerdaten aus bike.rider extrahieren
-  const RIDER_HEIGHT = rider.riderHeight
-  const RIDER_INSEAM = rider.riderInseam
-  const TORSO_ANGLE = rider.torsoAngle
-  const CLEAT_DROP = rider.shoeThickness
+  // ──────────────────────────────────────────────────────────────────────────
+  // FAHRER-PARAMETER (aus bike.rider)
+  // ──────────────────────────────────────────────────────────────────────────
+  const RIDER_HEIGHT = rider.riderHeight    // mm - Körpergröße
+  const RIDER_INSEAM = rider.riderInseam    // mm - Innenbeinlänge (Schritt bis Boden)
+  const TORSO_ANGLE = rider.torsoAngle      // Grad - Oberkörperneigung
+  const CLEAT_DROP = rider.shoeThickness    // mm - Schuhdicke (Pedalachse → Fußsohle)
 
   const points: Record<string, Point2D> = {}
   const segments: Segment[] = []
@@ -484,31 +497,35 @@ export function calculateBikeGeometry(
   // Unterschenkel: vom Fußkontakt zum Knie
   // Oberschenkel: vom Knie zur Sattelstütze (oben)
   
-  // Berechne Knie-Position mittels Zwei-Kreis-Schnitt (inverse Kinematik)
-  const footPos = points.footContact
+  // ──────────────────────────────────────────────────────────────────────────
+  // KNIE-POSITION: Inverse Kinematik (Zwei-Kreis-Schnitt)
+  // ──────────────────────────────────────────────────────────────────────────
+  // Gegeben: Fußposition, Sattelposition, Unter- und Oberschenkellänge
+  // Gesucht: Knieposition (Schnittpunkt zweier Kreise)
   
+  const footPos = points.footContact
   const dx = seatPos.x - footPos.x
   const dy = seatPos.y - footPos.y
   const distFootToSeat = Math.sqrt(dx * dx + dy * dy)
 
-  // Prüfe, ob die Beinlängen geometrisch erreichbar sind
+  // Prüfe geometrische Erreichbarkeit (Bein zu kurz/lang?)
   let kneePos: Point2D
 
   if (distFootToSeat > totalLegLength) {
-    // Bein zu kurz → strecke maximal aus
+    // FALL 1: Distanz zu groß → Bein maximal gestreckt
     const ratio = lowerLegLength / totalLegLength
     kneePos = {
       x: footPos.x + dx * ratio,
       y: footPos.y + dy * ratio,
     }
   } else if (distFootToSeat < Math.abs(lowerLegLength - upperLegLength)) {
-    // Unmöglich (zu nah) → setze Knie in die Mitte
+    // FALL 2: Distanz zu klein → ungültige Geometrie (Knie in Mitte)
     kneePos = {
       x: (footPos.x + seatPos.x) / 2,
       y: (footPos.y + seatPos.y) / 2,
     }
   } else {
-    // Normale Position: Zwei-Kreis-Schnitt
+    // FALL 3: Normale Position → Zwei-Kreis-Schnitt (Kosinussatz)
     // Dreieck: Fußkontakt - Knie - Sattel
     // a = Fuß→Sattel (Hypotenuse/bekannte Distanz)
     // b = Fuß→Knie (Unterschenkel)
@@ -536,22 +553,25 @@ export function calculateBikeGeometry(
 
   points.knee = kneePos
 
-  // Kniewinkel berechnen (Winkel zwischen Unterschenkel und Oberschenkel)
-  // Vektor vom Knie zum Fuß
+  // ──────────────────────────────────────────────────────────────────────────
+  // KNIEWINKEL: Winkel zwischen Unterschenkel und Oberschenkel
+  // ──────────────────────────────────────────────────────────────────────────
+  
   const kneeToFoot = {
     x: footPos.x - kneePos.x,
     y: footPos.y - kneePos.y,
   }
-  // Vektor vom Knie zum Sattel
   const kneeToSeat = {
     x: seatPos.x - kneePos.x,
     y: seatPos.y - kneePos.y,
   }
-  // Winkel berechnen mit atan2
+  
+  // Berechne Winkel mit atan2 (gibt Richtung in Radiant)
   const angleToFoot = Math.atan2(kneeToFoot.y, kneeToFoot.x)
   const angleToSeat = Math.atan2(kneeToSeat.y, kneeToSeat.x)
   let kneeAngleDeg = Math.abs((angleToSeat - angleToFoot) * 180 / Math.PI)
-  // Normalisiere auf 0-180° (kleinerer Winkel)
+  
+  // Normalisiere auf 0-180° (Innenwinkel)
   if (kneeAngleDeg > 180) kneeAngleDeg = 360 - kneeAngleDeg
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -562,61 +582,62 @@ export function calculateBikeGeometry(
   const neckLength = RIDER_HEIGHT * NECK_RATIO * SCALE
   const torsoLength = (RIDER_HEIGHT - RIDER_INSEAM - headHeight / SCALE - neckLength / SCALE) * SCALE
   
-  // Hüfte = Sattel-Mittelpunkt (nutzt SADDLE_SETBACK)
+  // Hüfte (visuell) = Sattel-Mittelpunkt
   points.hip = points.saddleTop
   
-  // Hüftgelenk (anatomisch): 9,5% der Innenbeinlänge entlang Torso-Vektor von saddleTop
-  const torsoAngle = toRadians(TORSO_ANGLE) // Oberkörperneigung relativ zur X-Achse
-  const hipJointOffset = RIDER_INSEAM * 0.095 * SCALE
+  // Hüftgelenk (anatomisch korrekt): 9,5% der Innenbeinlänge vom Sattel nach vorne/oben
+  // entlang des Oberkörperwinkels (Torso-Vektor)
+  const torsoAngle = toRadians(TORSO_ANGLE)
+  const hipJointOffset = RIDER_INSEAM * 0.095 * SCALE // 9,5% Offset für anatomisches Hüftgelenk
   points.hipJoint = {
     x: points.saddleTop.x + hipJointOffset * Math.cos(torsoAngle),
     y: points.saddleTop.y - hipJointOffset * Math.sin(torsoAngle),
   }
   
   // ──────────────────────────────────────────────────────────────────────────
-  // NEUE BEIN-BERECHNUNG (ab hipJoint statt saddleTop)
+  // ANATOMISCH KORREKTE BEIN-BERECHNUNG (vom Hüftgelenk)
   // ──────────────────────────────────────────────────────────────────────────
+  // Die alte Berechnung (knee, saddleTop) dient als Basis-Check.
+  // Die neue Berechnung (kneeNew, hipJoint) ist anatomisch präziser und wird
+  // für die finale Kniewinkel-Anzeige verwendet.
 
-  // Berechne aktuelle Distanz von hipJoint zu footContact
   const hipJointPos = points.hipJoint
   const dxHipFoot = hipJointPos.x - footPos.x
   const dyHipFoot = hipJointPos.y - footPos.y
   const distHipToFoot = Math.sqrt(dxHipFoot * dxHipFoot + dyHipFoot * dyHipFoot)
 
-  // Anatomisch korrekte Beinlänge: Inseam + Offset vom Sattel zum Hüftgelenk
+  // Anatomische Beinlänge = Innenbeinlänge + Hüftgelenk-Offset
   const anatomicalInseam = RIDER_INSEAM + hipJointOffset / SCALE
   const newLowerLegLength = anatomicalInseam * LOWER_LEG_RATIO * SCALE
   const newUpperLegLength = anatomicalInseam * UPPER_LEG_RATIO * SCALE
   const newTotalLegLength = newLowerLegLength + newUpperLegLength
 
-  // Berechne neues Knie mittels IK (von hipJoint zu footContact)
+  // Knie-Position via IK (von Hüftgelenk zu Fußkontakt)
   let kneeNewPos: Point2D
 
   if (distHipToFoot > newTotalLegLength) {
-    // Bein zu kurz → strecke maximal aus
+    // FALL 1: Maximal gestreckt
     const ratio = newLowerLegLength / newTotalLegLength
     kneeNewPos = {
       x: footPos.x + dxHipFoot * ratio,
       y: footPos.y + dyHipFoot * ratio,
     }
   } else if (distHipToFoot < Math.abs(newLowerLegLength - newUpperLegLength)) {
-    // Unmöglich (zu nah) → setze Knie in die Mitte
+    // FALL 2: Ungültige Geometrie
     kneeNewPos = {
       x: (footPos.x + hipJointPos.x) / 2,
       y: (footPos.y + hipJointPos.y) / 2,
     }
   } else {
-    // Normale Position: Zwei-Kreis-Schnitt
+    // FALL 3: Zwei-Kreis-Schnitt (Kosinussatz)
     const a = distHipToFoot
     const b = newLowerLegLength
     const c = newUpperLegLength
 
     const cosAlphaNew = (a * a + b * b - c * c) / (2 * a * b)
     const alphaNew = Math.acos(Math.max(-1, Math.min(1, cosAlphaNew)))
-
     const baseAngleNew = Math.atan2(dyHipFoot, dxHipFoot)
 
-    // Knie-Position: rotiere von Fußkontakt aus um alpha (gleiche Richtung wie alte Berechnung)
     kneeNewPos = {
       x: footPos.x + b * Math.cos(baseAngleNew + alphaNew),
       y: footPos.y + b * Math.sin(baseAngleNew + alphaNew),
@@ -641,27 +662,30 @@ export function calculateBikeGeometry(
   
   // ──────────────────────────────────────────────────────────────────────────
   
-  // Schulter: vom Hüftpunkt aus nach vorne/oben (einstellbare Oberkörperneigung)
+  // Schulter: vom Hüftpunkt entlang Oberkörperwinkel
   points.shoulder = {
     x: points.hip.x + torsoLength * Math.cos(torsoAngle),
     y: points.hip.y - torsoLength * Math.sin(torsoAngle),
   }
   
-  // Hals: von Schulter nach oben/vorne
-  const neckAngle = toRadians(60) // Halswinkel (aufrechter)
+  // Hals: von Schulter nach oben (60° aufrechter als Oberkörper)
+  const neckAngle = toRadians(60)
   points.neckTop = {
     x: points.shoulder.x + neckLength * Math.cos(neckAngle),
     y: points.shoulder.y - neckLength * Math.sin(neckAngle),
   }
   
-  // Kopf: Ellipse als Verlängerung vom Hals (im gleichen Winkel)
+  // Kopf-Zentrum: mittig vom Hals-Ende
   const headWidth = headHeight * HEAD_WIDTH_RATIO
   points.headCenter = {
     x: points.neckTop.x + (headHeight / 2) * Math.cos(neckAngle),
     y: points.neckTop.y - (headHeight / 2) * Math.sin(neckAngle),
   }
   
-  // Arme: Inverse Kinematik von Schulter zu handlebarCenter oder handlebarDropEnd
+  // ──────────────────────────────────────────────────────────────────────────
+  // ARM-POSITION: Inverse Kinematik (Schulter → Ellbogen → Lenker)
+  // ──────────────────────────────────────────────────────────────────────────
+  
   const handPos = cockpit.handPosition === 'drops' && points.handlebarDropEnd
     ? points.handlebarDropEnd
     : points.handlebarCenter
@@ -678,30 +702,29 @@ export function calculateBikeGeometry(
   let elbowPos: Point2D
   
   if (armDist > totalArmLength) {
-    // Arm zu kurz → strecke maximal aus
+    // FALL 1: Maximal gestreckt
     const ratio = upperArmScaled / totalArmLength
     elbowPos = {
       x: shoulderPos.x + armDx * ratio,
       y: shoulderPos.y + armDy * ratio,
     }
   } else if (armDist < Math.abs(upperArmScaled - lowerArmScaled)) {
-    // Unmöglich (zu nah) → Ellbogen in die Mitte
+    // FALL 2: Ungültige Geometrie
     elbowPos = {
       x: (shoulderPos.x + handPos.x) / 2,
       y: (shoulderPos.y + handPos.y) / 2,
     }
   } else {
-    // Normale Position: Zwei-Kreis-Schnitt
+    // FALL 3: Zwei-Kreis-Schnitt (Kosinussatz)
     const a = armDist
     const b = upperArmScaled
     const c = lowerArmScaled
     
     const cosAlphaArm = (a * a + b * b - c * c) / (2 * a * b)
     const alphaArm = Math.acos(Math.max(-1, Math.min(1, cosAlphaArm)))
-    
     const baseAngleArm = Math.atan2(armDy, armDx)
     
-    // Ellbogen nach unten (positive Rotation für natürliche Armhaltung)
+    // Ellbogen nach unten (natürliche Armhaltung)
     elbowPos = {
       x: shoulderPos.x + b * Math.cos(baseAngleArm + alphaArm),
       y: shoulderPos.y + b * Math.sin(baseAngleArm + alphaArm),
@@ -746,22 +769,25 @@ export function calculateBikeGeometry(
     { from: 'pedalLeftTop', to: 'pedalLeftBottom' },    // Linkes Pedal
   )
 
-  // Fahrer-Beine und Oberkörper (separate Array für grüne Farbe)
+  // ──────────────────────────────────────────────────────────────────────────
+  // FAHRER-SEGMENTE (separate Darstellung, typischerweise grün)
+  // ──────────────────────────────────────────────────────────────────────────
   const riderSegments: Segment[] = [
-    // Beine (ALT - zum Debugging behalten)
-    { from: 'cleatTop', to: 'cleatBottom' },        // Cleat-Verbindung (Pedal → Schuhsohle)
-    { from: 'cleatBottom', to: 'footContact' },     // Fußballen (Cleat → Kontaktpunkt)
-   // { from: 'footContact', to: 'knee' },            // Unterschenkel (alt)
-   // { from: 'knee', to: 'saddleTop' },              // Oberschenkel (alt, an Sattel-Mittelpunkt)
-    // Beine (NEU - ab hipJoint)
-    { from: 'footContact', to: 'kneeNew' },         // Unterschenkel (neu, von Fuß zu neuem Knie)
-    { from: 'kneeNew', to: 'hipJoint' },            // Oberschenkel (neu, von neuem Knie zu Hüftgelenk)
+    // Fuß & Cleat
+    { from: 'cleatTop', to: 'cleatBottom' },
+    { from: 'cleatBottom', to: 'footContact' },
+    
+    // Beine (anatomisch korrekt vom Hüftgelenk)
+    { from: 'footContact', to: 'kneeNew' },
+    { from: 'kneeNew', to: 'hipJoint' },
+    
     // Oberkörper
-    { from: 'hip', to: 'shoulder' },                // Torso
-    { from: 'shoulder', to: 'neckTop' },            // Hals
+    { from: 'hip', to: 'shoulder' },
+    { from: 'shoulder', to: 'neckTop' },
+    
     // Arme
-    { from: 'shoulder', to: 'elbow' },              // Oberarm
-    { from: 'elbow', to: cockpit.handPosition === 'drops' && points.handlebarDropEnd ? 'handlebarDropEnd' : 'handlebarCenter' },  // Unterarm
+    { from: 'shoulder', to: 'elbow' },
+    { from: 'elbow', to: cockpit.handPosition === 'drops' && points.handlebarDropEnd ? 'handlebarDropEnd' : 'handlebarCenter' },
   ]
 
   // Berechne Kniewinkel bei 90° und 270° Kurbelstellung
