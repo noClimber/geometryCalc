@@ -202,8 +202,8 @@ points.stemFront = {
     }
 
     // ─── Pedale (Crank + Pedal) – Länge 165mm, Winkel einstellbar ─────────────
-    const crankLength = 165 * SCALE
-    const pedalAngleRad = deg(23)
+    const crankLength = cockpit.crankLength * SCALE
+    const pedalAngleRad = deg(cockpit.pedalAngle)
     // zwei Pedale entgegengesetzt um das BB
     points.pedalRight = {
       x: points.bb.x + Math.cos(pedalAngleRad) * crankLength,

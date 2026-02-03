@@ -8,6 +8,8 @@ export const COCKPIT_LIMITS: Record<keyof CockpitSetup, { min: number; max: numb
   stemAngle:      { min: -25, max: 25,  step: 1 }, // Vorbauwinkel (Grad)
   handlebarReach: { min: 50,  max: 100, step: 5 },  // Lenker Reach (mm)
   handlebarDrop:  { min: 100, max: 160, step: 5 }, // Lenker Drop (mm)
+  crankLength:    { min: 165, max: 175, step: 2.5 }, // Kurbellänge (mm)
+  pedalAngle:     { min: 0,   max: 360, step: 15 },  // Pedalwinkel (Grad)
 }
 
 /**
@@ -32,5 +34,7 @@ export function clampCockpitSetup(cockpit: CockpitSetup): CockpitSetup {
     stemAngle:      clampCockpitValue('stemAngle',      cockpit.stemAngle),
     handlebarReach: clampCockpitValue('handlebarReach', cockpit.handlebarReach),
     handlebarDrop:  clampCockpitValue('handlebarDrop', cockpit.handlebarDrop),
+    crankLength:    clampCockpitValue('crankLength',    cockpit.crankLength),
+    pedalAngle:     clampCockpitValue('pedalAngle',     cockpit.pedalAngle),
   }
 }

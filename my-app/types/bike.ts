@@ -17,6 +17,8 @@ export type CockpitSetup = {
   stemAngle: number
   handlebarReach: number
   handlebarDrop: number
+  crankLength: number
+  pedalAngle: number
 }
 
 export type BikeData = {

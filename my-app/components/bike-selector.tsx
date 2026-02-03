@@ -31,6 +31,8 @@ const DEFAULT_COCKPIT: CockpitSetup = {
   stemAngle: -6,
   handlebarReach: 80,
   handlebarDrop: 125,
+  crankLength: 172.5,
+  pedalAngle: 23,
 }
 
 export function BikeSelector({
@@ -334,6 +336,40 @@ export function BikeSelector({
                     value={bike.cockpit.handlebarDrop}
                     onChange={(e) =>
                       handleCockpitChange('handlebarDrop', Number(e.target.value))
+                    }
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${bikeName}-crank-length`} className="text-xs">
+                    Kurbellänge (mm)
+                  </Label>
+                  <Input
+                    id={`${bikeName}-crank-length`}
+                    type="number"
+                    min={COCKPIT_LIMITS.crankLength.min}
+                    max={COCKPIT_LIMITS.crankLength.max}
+                    step={COCKPIT_LIMITS.crankLength.step}
+                    value={bike.cockpit.crankLength}
+                    onChange={(e) =>
+                      handleCockpitChange('crankLength', Number(e.target.value))
+                    }
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${bikeName}-pedal-angle`} className="text-xs">
+                    Pedalwinkel (Grad)
+                  </Label>
+                  <Input
+                    id={`${bikeName}-pedal-angle`}
+                    type="number"
+                    min={COCKPIT_LIMITS.pedalAngle.min}
+                    max={COCKPIT_LIMITS.pedalAngle.max}
+                    step={COCKPIT_LIMITS.pedalAngle.step}
+                    value={bike.cockpit.pedalAngle}
+                    onChange={(e) =>
+                      handleCockpitChange('pedalAngle', Number(e.target.value))
                     }
                     className="h-9"
                   />
