@@ -32,6 +32,9 @@ const DEFAULT_COCKPIT: CockpitSetup = {
   pedalAngle: 0,
 }
 
+// Animation interval for pedal auto-rotation (milliseconds)
+const PEDAL_ANIM_INTERVAL_MS = 5
+
 function getFirstAvailableBike(): BikeData | null {
   const brand = Object.keys(AVAILABLE_BIKES)[0]
   if (!brand) return null
@@ -102,7 +105,7 @@ export default function Home() {
           }
         })
       }
-    }, 20) // 1 degree every 0.02s
+    }, PEDAL_ANIM_INTERVAL_MS) // interval in ms
 
     return () => clearInterval(interval)
   }, [isPedaling, bikeB])

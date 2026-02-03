@@ -292,6 +292,27 @@ export function BikeVisualization({
           )
         })}
 
+        {/* Fahrer-Kopf (Ellipse) */}
+        {riderVisible && points.headCenter && points.neckTop && (() => {
+          const headHeight = 1800 * 0.12 * SCALE
+          const headWidth = headHeight * 0.7
+          // Berechne Rotationswinkel aus Hals-Richtung (60° Standard)
+          const neckAngleDeg = 60
+          return (
+            <ellipse
+              cx={points.headCenter.x}
+              cy={points.headCenter.y}
+              rx={headWidth / 2}
+              ry={headHeight / 2}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="3"
+              opacity={opacity}
+              transform={`rotate(${neckAngleDeg + 90}, ${points.headCenter.x}, ${points.headCenter.y})`}
+            />
+          )
+        })()}
+
         {/* Räder: Außendurchmesser 690mm, Felgendurchmesser 622mm (skaliert) */}
         {WHEEL_POINT_IDS.map((id) => {
           const p = points[id]
@@ -327,8 +348,8 @@ export function BikeVisualization({
           const p = points[id]
           if (!p) return null
           
-          // Fahrer-Punkte: knee, footContact, cleatTop, cleatBottom
-          const isRiderPoint = ['knee', 'footContact', 'cleatTop', 'cleatBottom'].includes(id)
+          // Fahrer-Punkte: knee, footContact, cleatTop, cleatBottom, hip, shoulder, neckTop, headCenter, elbow
+          const isRiderPoint = ['knee', 'footContact', 'cleatTop', 'cleatBottom', 'hip', 'shoulder', 'neckTop', 'headCenter', 'elbow'].includes(id)
           if (isRiderPoint && !riderVisible) return null
           
           const isSelected = measurePoints.some((mp) => mp.id === id && mp.bike === bikeId)

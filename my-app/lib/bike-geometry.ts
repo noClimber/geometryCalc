@@ -38,6 +38,11 @@ export const KEY_POINT_IDS = [
   'footContact',
   'cleatTop',
   'cleatBottom',
+  'hip',
+  'shoulder',
+  'neckTop',
+  'headCenter',
+  'elbow',
 ] as const
 
 // Skalierungsfaktor: mm → SVG-Einheiten
@@ -62,8 +67,17 @@ const PEDAL_WIDTH = 50 // mm (Gesamt-Breite der Pedal-Anzeige)
 
 // Fahrerdaten
 const RIDER_INSEAM = 890 // mm (Innenbeinlänge vom Schritt bis Fußsohle)
+const RIDER_HEIGHT = 1800 // mm (Gesamtkörpergröße)
 const UPPER_LEG_RATIO = 0.53 // Oberschenkel-Anteil an Innenbeinlänge
 const LOWER_LEG_RATIO = 0.47 // Unterschenkel-Anteil an Innenbeinlänge
+
+// Oberkörper-Proportionen
+const HEAD_RATIO = 0.12 // Kopfhöhe als Anteil der Körpergröße
+const NECK_RATIO = 0.055 // Halslänge als Anteil der Körpergröße
+const HEAD_WIDTH_RATIO = 0.7 // Kopfbreite relativ zur Kopfhöhe
+const UPPER_ARM_RATIO = 0.186 // Oberarm-Länge als Anteil der Körpergröße (ca. 18.6%)
+const LOWER_ARM_RATIO = 0.146 // Unterarm-Länge als Anteil der Körpergröße (ca. 14.6%)
+const TORSO_ANGLE = 30 // Grad (Oberkörperneigung relativ zur X-Achse)
 
 // Schuh & Cleat (Kontaktpunkt Fuß-Pedal)
 const CLEAT_SETBACK = 120 // mm (Abstand Pedalachse → Fußballen, nach hinten)
@@ -385,7 +399,86 @@ export function calculateBikeGeometry(
   points.knee = kneePos
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 7. SEGMENTE (Verbindungslinien)
+  // 7. OBERKÖRPER (Torso, Hals, Kopf, Arme)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const headHeight = RIDER_HEIGHT * HEAD_RATIO * SCALE
+  const neckLength = RIDER_HEIGHT * NECK_RATIO * SCALE
+  const torsoLength = (RIDER_HEIGHT - RIDER_INSEAM - headHeight / SCALE - neckLength / SCALE) * SCALE
+  
+  // Hüfte = Sitzposition (seatPostTop)
+  points.hip = points.seatPostTop
+  
+  // Schulter: vom Hüftpunkt aus nach vorne/oben (einstellbare Oberkörperneigung)
+  const torsoAngle = toRadians(TORSO_ANGLE) // Oberkörperneigung relativ zur X-Achse
+  points.shoulder = {
+    x: points.hip.x + torsoLength * Math.cos(torsoAngle),
+    y: points.hip.y - torsoLength * Math.sin(torsoAngle),
+  }
+  
+  // Hals: von Schulter nach oben/vorne
+  const neckAngle = toRadians(60) // Halswinkel (aufrechter)
+  points.neckTop = {
+    x: points.shoulder.x + neckLength * Math.cos(neckAngle),
+    y: points.shoulder.y - neckLength * Math.sin(neckAngle),
+  }
+  
+  // Kopf: Ellipse als Verlängerung vom Hals (im gleichen Winkel)
+  const headWidth = headHeight * HEAD_WIDTH_RATIO
+  points.headCenter = {
+    x: points.neckTop.x + (headHeight / 2) * Math.cos(neckAngle),
+    y: points.neckTop.y - (headHeight / 2) * Math.sin(neckAngle),
+  }
+  
+  // Arme: Inverse Kinematik von Schulter zu handlebarCenter
+  const handPos = points.handlebarCenter
+  const shoulderPos = points.shoulder
+  
+  const armDx = handPos.x - shoulderPos.x
+  const armDy = handPos.y - shoulderPos.y
+  const armDist = Math.sqrt(armDx * armDx + armDy * armDy)
+  
+  const upperArmScaled = RIDER_HEIGHT * UPPER_ARM_RATIO * SCALE
+  const lowerArmScaled = RIDER_HEIGHT * LOWER_ARM_RATIO * SCALE
+  const totalArmLength = upperArmScaled + lowerArmScaled
+  
+  let elbowPos: Point2D
+  
+  if (armDist > totalArmLength) {
+    // Arm zu kurz → strecke maximal aus
+    const ratio = upperArmScaled / totalArmLength
+    elbowPos = {
+      x: shoulderPos.x + armDx * ratio,
+      y: shoulderPos.y + armDy * ratio,
+    }
+  } else if (armDist < Math.abs(upperArmScaled - lowerArmScaled)) {
+    // Unmöglich (zu nah) → Ellbogen in die Mitte
+    elbowPos = {
+      x: (shoulderPos.x + handPos.x) / 2,
+      y: (shoulderPos.y + handPos.y) / 2,
+    }
+  } else {
+    // Normale Position: Zwei-Kreis-Schnitt
+    const a = armDist
+    const b = upperArmScaled
+    const c = lowerArmScaled
+    
+    const cosAlphaArm = (a * a + b * b - c * c) / (2 * a * b)
+    const alphaArm = Math.acos(Math.max(-1, Math.min(1, cosAlphaArm)))
+    
+    const baseAngleArm = Math.atan2(armDy, armDx)
+    
+    // Ellbogen nach unten (positive Rotation für natürliche Armhaltung)
+    elbowPos = {
+      x: shoulderPos.x + b * Math.cos(baseAngleArm + alphaArm),
+      y: shoulderPos.y + b * Math.sin(baseAngleArm + alphaArm),
+    }
+  }
+  
+  points.elbow = elbowPos
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 8. SEGMENTE (Verbindungslinien)
   // ──────────────────────────────────────────────────────────────────────────
 
   // Rahmen
@@ -420,12 +513,19 @@ export function calculateBikeGeometry(
     { from: 'pedalLeftTop', to: 'pedalLeftBottom' },    // Linkes Pedal
   )
 
-  // Fahrer-Beine (separate Array für grüne Farbe)
+  // Fahrer-Beine und Oberkörper (separate Array für grüne Farbe)
   const riderSegments: Segment[] = [
+    // Beine
     { from: 'cleatTop', to: 'cleatBottom' },        // Cleat-Verbindung (Pedal → Schuhsohle)
     { from: 'cleatBottom', to: 'footContact' },     // Fußballen (Cleat → Kontaktpunkt)
     { from: 'footContact', to: 'knee' },            // Unterschenkel
     { from: 'knee', to: 'seatPostTop' },            // Oberschenkel
+    // Oberkörper
+    { from: 'hip', to: 'shoulder' },                // Torso
+    { from: 'shoulder', to: 'neckTop' },            // Hals
+    // Arme
+    { from: 'shoulder', to: 'elbow' },              // Oberarm
+    { from: 'elbow', to: 'handlebarCenter' },       // Unterarm
   ]
 
   return { points, segments, riderSegments }
