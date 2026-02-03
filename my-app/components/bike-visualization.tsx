@@ -235,7 +235,7 @@ export function BikeVisualization({
     opacity: number,
     bikeId: 'A' | 'B'
   ) => {
-    const { points, segments } = result
+    const { points, segments, riderSegments } = result
 
     const handlePointClick = (id: string) => {
       if (!measureMode) return
@@ -267,6 +267,25 @@ export function BikeVisualization({
               y2={b.y}
               stroke={color}
               strokeWidth="2"
+              opacity={opacity}
+            />
+          )
+        })}
+
+        {/* Fahrer-Beine (grün) */}
+        {riderSegments?.map(({ from, to }) => {
+          const a = points[from]
+          const b = points[to]
+          if (!a || !b) return null
+          return (
+            <line
+              key={`rider-${from}-${to}`}
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke="#22c55e"
+              strokeWidth="3"
               opacity={opacity}
             />
           )

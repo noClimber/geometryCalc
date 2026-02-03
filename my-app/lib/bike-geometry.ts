@@ -14,6 +14,7 @@ export type Segment = { from: string; to: string }
 export type BikeGeometryResult = {
   points: Record<string, Point2D>
   segments: Segment[]
+  riderSegments?: Segment[] // Optional: Fahrer-Segmente (separate Farbe)
 }
 
 /** Punkt-IDs, die als Räder gezeichnet werden (Kreise). */
@@ -33,6 +34,10 @@ export const KEY_POINT_IDS = [
   'seatPostTop',
   'pedalRight',
   'pedalLeft',
+  'knee',
+  'footContact',
+  'cleatTop',
+  'cleatBottom',
 ] as const
 
 // Skalierungsfaktor: mm → SVG-Einheiten
@@ -48,12 +53,24 @@ const HEADSET_BEARING_DIAMETER = 31.8 // mm
 const HANDLEBAR_ARC_STEPS = 12
 
 // Sattel & Sattelstütze
-const SEATPOST_LENGTH = 250 // mm
+const SEATPOST_LENGTH = 200 // mm
 const SADDLE_LENGTH = 255 // mm
-const SADDLE_SETBACK = 20 // mm
+const SADDLE_SETBACK = 30 // mm
 
 // Pedale
 const PEDAL_WIDTH = 50 // mm (Gesamt-Breite der Pedal-Anzeige)
+
+// Fahrerdaten
+const RIDER_INSEAM = 890 // mm (Innenbeinlänge vom Schritt bis Fußsohle)
+const UPPER_LEG_RATIO = 0.53 // Oberschenkel-Anteil an Innenbeinlänge
+const LOWER_LEG_RATIO = 0.47 // Unterschenkel-Anteil an Innenbeinlänge
+
+// Schuh & Cleat (Kontaktpunkt Fuß-Pedal)
+const CLEAT_SETBACK = 120 // mm (Abstand Pedalachse → Fußballen, nach hinten)
+const CLEAT_DROP = 15 // mm (Vertikaler Abstand Pedalachse → Fußsohle)
+const FOOT_ANGLE_DEFAULT = 10 // Grad (Standard-Fußwinkel, leicht nach unten)
+
+const SHOE_EXT_AFT = 20 // mm (Wie weit über den Cleat hinaus zeigt der Schuh nach hinten?)
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -262,7 +279,113 @@ export function calculateBikeGeometry(
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 6. SEGMENTE (Verbindungslinien)
+  // 6. FAHRER (Beine & Fuß)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const lowerLegLength = RIDER_INSEAM * LOWER_LEG_RATIO * SCALE
+  const upperLegLength = RIDER_INSEAM * UPPER_LEG_RATIO * SCALE
+
+  // Fußposition: Cleat-Kontaktpunkt liegt hinter und unter der Pedalachse
+  const pedalPos = points.pedalRight
+  const seatPos = points.seatPostTop
+  
+  // Berechne vorläufige Distanz für Fußwinkel-Optimierung
+  const dxPedalSeat = seatPos.x - pedalPos.x
+  const dyPedalSeat = seatPos.y - pedalPos.y
+  const distPedalToSeat = Math.sqrt(dxPedalSeat * dxPedalSeat + dyPedalSeat * dyPedalSeat)
+  
+  // Fußwinkel: wenn Bein zu kurz ist, muss Fuß mehr gestreckt werden
+  const totalLegLength = lowerLegLength + upperLegLength
+  const stretch = distPedalToSeat / totalLegLength
+  
+  // Dynamischer Fußwinkel basierend auf Pedalposition:
+  // - Bei 90° (unten): voller FOOT_ANGLE_DEFAULT
+  // - Bei 270° (oben): 0° (horizontal)
+  // - Bei 0° und 180°: FOOT_ANGLE_DEFAULT / 2
+  const baseDynamicFootAngle = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngleRad)) / 2
+  
+  const footAngle = stretch > 1.0 
+    ? baseDynamicFootAngle + (stretch - 1.0) * 30 // Bei Streckung: Fuß stärker nach unten
+    : baseDynamicFootAngle
+  
+  const footAngleRad = toRadians(footAngle)
+  const cleatSetback = CLEAT_SETBACK * SCALE
+  const cleatDrop = CLEAT_DROP * SCALE
+  
+  // Cleat-Verbindung: vertikale Linie vom Pedal nach unten (nur cleatDrop)
+  points.cleatTop = {
+    x: pedalPos.x,
+    y: pedalPos.y,
+  }
+  // Cleat nach oben (invertiertes Vorzeichen), da Y positiv nach unten läuft
+  points.cleatBottom = {
+    x: pedalPos.x,
+    y: pedalPos.y - cleatDrop,
+  }
+
+  // Fußkontaktpunkt am Ende der Cleat-Verbindung, versetzt um cleatSetback in Fußrichtung
+  points.footContact = {
+    x: points.cleatBottom.x - cleatSetback * Math.cos(footAngleRad),
+    y: points.cleatBottom.y - cleatSetback * Math.sin(footAngleRad),
+  }
+  
+  // Unterschenkel: vom Fußkontakt zum Knie
+  // Oberschenkel: vom Knie zur Sattelstütze (oben)
+  
+  // Berechne Knie-Position mittels Zwei-Kreis-Schnitt (inverse Kinematik)
+  const footPos = points.footContact
+  
+  const dx = seatPos.x - footPos.x
+  const dy = seatPos.y - footPos.y
+  const distFootToSeat = Math.sqrt(dx * dx + dy * dy)
+
+  // Prüfe, ob die Beinlängen geometrisch erreichbar sind
+  let kneePos: Point2D
+
+  if (distFootToSeat > totalLegLength) {
+    // Bein zu kurz → strecke maximal aus
+    const ratio = lowerLegLength / totalLegLength
+    kneePos = {
+      x: footPos.x + dx * ratio,
+      y: footPos.y + dy * ratio,
+    }
+  } else if (distFootToSeat < Math.abs(lowerLegLength - upperLegLength)) {
+    // Unmöglich (zu nah) → setze Knie in die Mitte
+    kneePos = {
+      x: (footPos.x + seatPos.x) / 2,
+      y: (footPos.y + seatPos.y) / 2,
+    }
+  } else {
+    // Normale Position: Zwei-Kreis-Schnitt
+    // Dreieck: Fußkontakt - Knie - Sattel
+    // a = Fuß→Sattel (Hypotenuse/bekannte Distanz)
+    // b = Fuß→Knie (Unterschenkel)
+    // c = Knie→Sattel (Oberschenkel)
+    
+    const a = distFootToSeat
+    const b = lowerLegLength
+    const c = upperLegLength
+
+    // Cosinus-Satz für Winkel alpha am Fußkontakt: c² = a² + b² - 2ab*cos(alpha)
+    // Umgestellt: cos(alpha) = (a² + b² - c²) / (2ab)
+    const cosAlpha = (a * a + b * b - c * c) / (2 * a * b)
+    const alpha = Math.acos(Math.max(-1, Math.min(1, cosAlpha)))
+
+    // Winkel der Linie Fuß→Sattel
+    const baseAngle = Math.atan2(dy, dx)
+
+    // Knie-Position: rotiere von Fußkontakt aus um alpha
+    // (Nutze positive Rotation, damit Knie nach vorne zeigt)
+    kneePos = {
+      x: footPos.x + b * Math.cos(baseAngle + alpha),
+      y: footPos.y + b * Math.sin(baseAngle + alpha),
+    }
+  }
+
+  points.knee = kneePos
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 7. SEGMENTE (Verbindungslinien)
   // ──────────────────────────────────────────────────────────────────────────
 
   // Rahmen
@@ -297,7 +420,15 @@ export function calculateBikeGeometry(
     { from: 'pedalLeftTop', to: 'pedalLeftBottom' },    // Linkes Pedal
   )
 
-  return { points, segments }
+  // Fahrer-Beine (separate Array für grüne Farbe)
+  const riderSegments: Segment[] = [
+    { from: 'cleatTop', to: 'cleatBottom' },        // Cleat-Verbindung (Pedal → Schuhsohle)
+    { from: 'cleatBottom', to: 'footContact' },     // Fußballen (Cleat → Kontaktpunkt)
+    { from: 'footContact', to: 'knee' },            // Unterschenkel
+    { from: 'knee', to: 'seatPostTop' },            // Oberschenkel
+  ]
+
+  return { points, segments, riderSegments }
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -29,7 +29,7 @@ const DEFAULT_COCKPIT: CockpitSetup = {
   handlebarReach: 80,
   handlebarDrop: 125,
   crankLength: 172.5,
-  pedalAngle: 23,
+  pedalAngle: 0,
 }
 
 function getFirstAvailableBike(): BikeData | null {
