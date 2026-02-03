@@ -27,6 +27,8 @@ export const KEY_POINT_IDS = [
   'frontWheel',
   'rearWheel',
   'seatPostTop',
+  'pedalRight',
+  'pedalLeft',
 ] as const
 
 export const SCALE = 0.8 // mm → SVG-Einheiten
@@ -199,6 +201,39 @@ points.stemFront = {
     y: points.saddleLenFwd.y,
     }
 
+    // ─── Pedale (Crank + Pedal) – Länge 165mm, Winkel einstellbar ─────────────
+    const crankLength = 165 * SCALE
+    const pedalAngleRad = deg(23)
+    // zwei Pedale entgegengesetzt um das BB
+    points.pedalRight = {
+      x: points.bb.x + Math.cos(pedalAngleRad) * crankLength,
+      y: points.bb.y + Math.sin(pedalAngleRad) * crankLength,
+    }
+    points.pedalLeft = {
+      x: points.bb.x + Math.cos(pedalAngleRad + Math.PI) * crankLength,
+      y: points.bb.y + Math.sin(pedalAngleRad + Math.PI) * crankLength,
+    }
+
+    // Pedal-Anzeige: 50mm lange Linie, immer parallel zur Y-Achse (vertikal), zentriert am Kurbelende
+    const pedalHalf = 25 * SCALE // 50mm / 2
+    points.pedalRightTop = {
+      x: points.pedalRight.x - pedalHalf,
+      y: points.pedalRight.y,
+    }
+    points.pedalRightBottom = {
+      x: points.pedalRight.x + pedalHalf,
+      y: points.pedalRight.y,
+    }
+    points.pedalLeftTop = {
+      x: points.pedalLeft.x - pedalHalf,
+      y: points.pedalLeft.y,
+    }
+    points.pedalLeftBottom = {
+      x: points.pedalLeft.x + pedalHalf,
+      y: points.pedalLeft.y,
+    }
+
+    
   // ─── Segmente (Linien) – Rahmen + Cockpit ───────────────────────────────────
   segments.push(
     { from: 'bb', to: 'headTubeTop' },
@@ -212,8 +247,14 @@ points.stemFront = {
     { from: 'stemFront', to: 'handlebarCenter' },
     { from: 'seatTubeTop', to: 'seatPostTop' },
     { from: 'saddleLenFwd', to: 'saddleLenAft' },
-    { from: 'seatTubeTop', to: 'headTubeTop' }
+    { from: 'seatTubeTop', to: 'headTubeTop' },
+    { from: 'bb', to: 'pedalRight' }, 
+    { from: 'bb', to: 'pedalLeft' },        { from: 'pedalRightTop', to: 'pedalRightBottom' },
+    { from: 'pedalLeftTop', to: 'pedalLeftBottom' }
   )
+
+
+
 
   return { points, segments }
 }
