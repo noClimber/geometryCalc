@@ -32,6 +32,7 @@ const DEFAULT_COCKPIT: CockpitSetup = {
   crankLength: 172.5,
   pedalAngle: 0,
   handPosition: 'hoods',
+  seatPostLength: 240,
 }
 
 const DEFAULT_RIDER: RiderSetup = {

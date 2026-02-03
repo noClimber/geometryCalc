@@ -7,6 +7,12 @@ import {
   WHEEL_POINT_IDS,
   KEY_POINT_IDS,
   SCALE,
+  KNEE_90_MIN,
+  KNEE_90_MAX,
+  KNEE_90_MIN_WARNING,
+  KNEE_90_MAX_WARNING,
+  KNEE_270_MIN,
+  KNEE_270_MIN_WARNING,
 } from '@/lib/bike-geometry'
 import { Card } from '@/components/ui/card'
 import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } from 'react'
@@ -522,6 +528,60 @@ export function BikeVisualization({
           >
             {riderVisible ? '🚴 An' : '🚴 Aus'}
           </button>
+          
+          {/* Knee Angle Display (Debug) */}
+          {riderVisible && geometryA?.kneeAngle !== undefined && (
+            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
+              <span className="font-medium">Kniewinkel: </span>
+              <span className="text-primary font-bold">{geometryA.kneeAngle.toFixed(1)}°</span>
+            </div>
+          )}
+          
+          {/* Knee Angle at 90° */}
+          {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
+            const angle = geometryA.kneeAngleAt90
+            const isRed = angle <= KNEE_90_MIN || angle >= KNEE_90_MAX
+            const isYellow = !isRed && (angle < KNEE_90_MIN_WARNING || angle > KNEE_90_MAX_WARNING)
+            return (
+              <div 
+                className="px-2 py-1 rounded text-[10px]"
+                style={{
+                  backgroundColor: isRed 
+                    ? 'hsl(0 84% 60%)' 
+                    : isYellow 
+                      ? 'hsl(45 93% 47%)'
+                      : 'hsl(var(--muted) / 0.5)',
+                  color: isRed || isYellow ? 'white' : 'inherit'
+                }}
+              >
+                <span className="font-medium">@ 90°: </span>
+                <span className="font-bold">{angle.toFixed(1)}°</span>
+              </div>
+            )
+          })()}
+          
+          {/* Knee Angle at 270° */}
+          {riderVisible && geometryA?.kneeAngleAt270 !== undefined && (() => {
+            const angle = geometryA.kneeAngleAt270
+            const isRed = angle <= KNEE_270_MIN
+            const isYellow = !isRed && angle < KNEE_270_MIN_WARNING
+            return (
+              <div 
+                className="px-2 py-1 rounded text-[10px]"
+                style={{
+                  backgroundColor: isRed 
+                    ? 'hsl(0 84% 60%)' 
+                    : isYellow 
+                      ? 'hsl(45 93% 47%)'
+                      : 'hsl(var(--muted) / 0.5)',
+                  color: isRed || isYellow ? 'white' : 'inherit'
+                }}
+              >
+                <span className="font-medium">@ 270°: </span>
+                <span className="font-bold">{angle.toFixed(1)}°</span>
+              </div>
+            )
+          })()}
           
           {bikeA && (
             <div className="flex items-center gap-1.5">

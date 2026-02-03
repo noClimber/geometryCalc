@@ -21,6 +21,7 @@ export type CockpitSetup = {
   crankLength: number
   pedalAngle: number
   handPosition: 'hoods' | 'drops'
+  seatPostLength: number
 }
 
 export type RiderSetup = {

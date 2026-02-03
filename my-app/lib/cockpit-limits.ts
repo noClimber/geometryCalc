@@ -10,6 +10,7 @@ export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>,
   handlebarDrop:  { min: 100, max: 160, step: 5 }, // Lenker Drop (mm)
   crankLength:    { min: 165, max: 175, step: 2.5 }, // Kurbellänge (mm)
   pedalAngle:     { min: 0,   max: 360, step: 15 },  // Pedalwinkel (Grad)
+  seatPostLength: { min: 100, max: 400, step: 5 },  // Sattelstütze (mm)
 }
 
 /**
@@ -37,5 +38,6 @@ export function clampCockpitSetup(cockpit: CockpitSetup): CockpitSetup {
     crankLength:    clampCockpitValue('crankLength',    cockpit.crankLength),
     pedalAngle:     clampCockpitValue('pedalAngle',     cockpit.pedalAngle),
     handPosition:   cockpit.handPosition ?? 'hoods',
+    seatPostLength: clampCockpitValue('seatPostLength', cockpit.seatPostLength),
   }
 }

@@ -34,6 +34,7 @@ const DEFAULT_COCKPIT: CockpitSetup = {
   crankLength: 172.5,
   pedalAngle: 23,
   handPosition: 'hoods',
+  seatPostLength: 240,
 }
 
 const DEFAULT_RIDER: RiderSetup = {
@@ -402,6 +403,23 @@ export function BikeSelector({
                     value={bike.cockpit.pedalAngle}
                     onChange={(e) =>
                       handleCockpitChange('pedalAngle', Number(e.target.value))
+                    }
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`${bikeName}-seat-post-length`} className="text-xs">
+                    Sattelstütze (mm)
+                  </Label>
+                  <Input
+                    id={`${bikeName}-seat-post-length`}
+                    type="number"
+                    min={COCKPIT_LIMITS.seatPostLength.min}
+                    max={COCKPIT_LIMITS.seatPostLength.max}
+                    step={COCKPIT_LIMITS.seatPostLength.step}
+                    value={bike.cockpit.seatPostLength}
+                    onChange={(e) =>
+                      handleCockpitChange('seatPostLength', Number(e.target.value))
                     }
                     className="h-9"
                   />
