@@ -6,8 +6,10 @@
         "reach": 370,
         "headTubeAngle": 70.9,
         "seatTubeAngle": 74.3,
+        "forkLength": 370,
         "bbDrop": 74,
         "headTubeLength": 100,
+        "seatTubeLength": 400,
         "chainstayLength": 410,
         "frontCenter": 582
       },
@@ -16,8 +18,10 @@
         "reach": 374,
         "headTubeAngle": 71.2,
         "seatTubeAngle": 74.3,
+        "forkLength": 370,
         "bbDrop": 74,
         "headTubeLength": 114,
+        "seatTubeLength": 438,
         "chainstayLength": 410,
         "frontCenter": 589
       },
@@ -26,8 +30,10 @@
         "reach": 378,
         "headTubeAngle": 71.2,
         "seatTubeAngle": 74.3,
+        "forkLength": 370,
         "bbDrop": 74,
         "headTubeLength": 130,
+        "seatTubeLength": 477,
         "chainstayLength": 410,
         "frontCenter": 598
       },
@@ -36,8 +42,10 @@
         "reach": 384,
         "headTubeAngle": 71.2,
         "seatTubeAngle": 73.7,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 154,
+        "seatTubeLength": 515,
         "chainstayLength": 410,
         "frontCenter": 611
       },
@@ -46,8 +54,10 @@
         "reach": 389,
         "headTubeAngle": 73.0,
         "seatTubeAngle": 73.3,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 165,
+        "seatTubeLength": 534,
         "chainstayLength": 410,
         "frontCenter": 594
       },
@@ -56,8 +66,10 @@
         "reach": 395,
         "headTubeAngle": 73.0,
         "seatTubeAngle": 72.9,
+        "forkLength": 370,
         "bbDrop": 69,
         "headTubeLength": 188,
+        "seatTubeLength": 567,
         "chainstayLength": 410,
         "frontCenter": 607
       },
@@ -66,8 +78,10 @@
         "reach": 403,
         "headTubeAngle": 73.0,
         "seatTubeAngle": 72.3,
+        "forkLength": 370,
         "bbDrop": 69,
         "headTubeLength": 220,
+        "seatTubeLength": 600,
         "chainstayLength": 410,
         "frontCenter": 624
       }
@@ -80,8 +94,10 @@
         "reach": 358,
         "headTubeAngle": 71.0,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 57,
         "headTubeLength": 103,
+        "seatTubeLength": 550,
         "chainstayLength": 405,
         "frontCenter": 550
       },
@@ -90,8 +106,10 @@
         "reach": 372,
         "headTubeAngle": 71.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 57,
         "headTubeLength": 121,
+        "seatTubeLength": 550,
         "chainstayLength": 405,
         "frontCenter": 566
       },
@@ -100,8 +118,10 @@
         "reach": 378,
         "headTubeAngle": 71.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 109,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 573
       },
@@ -110,8 +130,10 @@
         "reach": 390,
         "headTubeAngle": 72.75,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 70,
         "headTubeLength": 126,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 580
       },
@@ -120,8 +142,10 @@
         "reach": 393,
         "headTubeAngle": 73.25,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 70,
         "headTubeLength": 147,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 585
       },
@@ -130,8 +154,10 @@
         "reach": 401,
         "headTubeAngle": 73.25,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 70,
         "headTubeLength": 167,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 598
       },
@@ -140,8 +166,10 @@
         "reach": 419,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 70,
         "headTubeLength": 193,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 621
       },
@@ -150,8 +178,10 @@
         "reach": 429,
         "headTubeAngle": 73.75,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 70,
         "headTubeLength": 211,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 634
       }
@@ -164,8 +194,10 @@
         "reach": 389,
         "headTubeAngle": 72.3,
         "seatTubeAngle": 75,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 95,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 577
       },
@@ -174,8 +206,10 @@
         "reach": 389,
         "headTubeAngle": 72.5,
         "seatTubeAngle": 74.2,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 105,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 577
       },
@@ -184,8 +218,10 @@
         "reach": 389,
         "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 69,
         "headTubeLength": 125,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 580
       },
@@ -194,8 +230,10 @@
         "reach": 398,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 69,
         "headTubeLength": 145,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 591
       },
@@ -204,8 +242,10 @@
         "reach": 403,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73,
+        "forkLength": 370,
         "bbDrop": 67,
         "headTubeLength": 165,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       },
@@ -214,8 +254,10 @@
         "reach": 405,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 72.5,
+        "forkLength": 370,
         "bbDrop": 67,
         "headTubeLength": 180,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 606
       }
@@ -227,8 +269,10 @@
         "reach": 389,
         "headTubeAngle": 72.2,
         "seatTubeAngle": 75,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 107,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 577
       },
@@ -237,8 +281,10 @@
         "reach": 389,
         "headTubeAngle": 72.5,
         "seatTubeAngle": 74.2,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 117,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 577
       },
@@ -247,8 +293,10 @@
         "reach": 390,
         "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 69,
         "headTubeLength": 137,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 580
       },
@@ -257,8 +305,10 @@
         "reach": 398,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 69,
         "headTubeLength": 157,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 591
       },
@@ -267,8 +317,10 @@
         "reach": 403,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73,
+        "forkLength": 370,
         "bbDrop": 67,
         "headTubeLength": 177,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       },
@@ -277,8 +329,10 @@
         "reach": 405,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 72.5,
+        "forkLength": 370,
         "bbDrop": 67,
         "headTubeLength": 192,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 606
       }
@@ -291,8 +345,10 @@
         "reach": 383,
         "headTubeAngle": 72.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 165,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       },
@@ -301,8 +357,10 @@
         "reach": 393,
         "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 200,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       },
@@ -311,8 +369,10 @@
         "reach": 403,
         "headTubeAngle": 73.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 72,
         "headTubeLength": 250,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       }
@@ -323,8 +383,10 @@
         "reach": 376,
         "headTubeAngle": 72,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 75,
         "headTubeLength": 386,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       },
@@ -333,8 +395,10 @@
         "reach": 386,
         "headTubeAngle": 72.5,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
         "bbDrop": 75,
         "headTubeLength": 396,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       },
@@ -343,9 +407,11 @@
         "reach": 396,
         "headTubeAngle": 73,
         "seatTubeAngle": 73.5,
+        "forkLength": 370,
 
         "bbDrop": 75,
         "headTubeLength": 406,
+        "seatTubeLength": 550,
         "chainstayLength": 410,
         "frontCenter": 600
       }

@@ -7,8 +7,10 @@ export const bikeGeometrySchema = z.object({
   reach: z.number(),
   headTubeAngle: z.number(),
   seatTubeAngle: z.number(),
+  forkLength: z.number(),
   bbDrop: z.number(),
   headTubeLength: z.number(),
+  seatTubeLength: z.number(),
   chainstayLength: z.number().optional(),
   frontCenter: z.number().optional(),
 })

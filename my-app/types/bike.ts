@@ -6,6 +6,7 @@ export type BikeGeometry = {
   forkLength: number
   bbDrop: number
   headTubeLength: number
+  seatTubeLength: number
   chainstayLength?: number
   frontCenter?: number
 }

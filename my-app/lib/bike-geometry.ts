@@ -148,9 +148,7 @@ points.stemFront = {
   }
 
   // ─── 5) Sattelrohr-Oberkante (Seat Tube Top) – Sitzrohrwinkel ───────────────
-  // Platzhalter: effektive Sitzrohrlänge (nicht in Geometrie vorhanden).
-  // Ersetze durch deine Formel (z. B. aus Stack/Reach/SATT-Winkel).
-  const seatTubeLength = 520 * SCALE // typisch ~500–600 mm
+  const seatTubeLength = geometry.seatTubeLength * SCALE
   const staRad = deg(seatTubeAngle)
   points.seatTubeTop = {
     x: -Math.cos(staRad) * seatTubeLength,
