@@ -27,6 +27,7 @@ export function BikeVisualization({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [measurePoints, setMeasurePoints] = useState<Array<{id: string, bike: 'A' | 'B'}>>([])
   const [measureMode, setMeasureMode] = useState(false)
+  const [riderVisible, setRiderVisible] = useState(true)
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -88,7 +89,7 @@ export function BikeVisualization({
     setIsDragging(false)
   }
 
-  const getTouchDistance = (touches: TouchList) => {
+  const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return null
     const dx = touches[0].clientX - touches[1].clientX
     const dy = touches[0].clientY - touches[1].clientY
@@ -273,7 +274,7 @@ export function BikeVisualization({
         })}
 
         {/* Fahrer-Beine (grün) */}
-        {riderSegments?.map(({ from, to }) => {
+        {riderVisible && riderSegments?.map(({ from, to }) => {
           const a = points[from]
           const b = points[to]
           if (!a || !b) return null
@@ -325,14 +326,21 @@ export function BikeVisualization({
         {KEY_POINT_IDS.map((id) => {
           const p = points[id]
           if (!p) return null
+          
+          // Fahrer-Punkte: knee, footContact, cleatTop, cleatBottom
+          const isRiderPoint = ['knee', 'footContact', 'cleatTop', 'cleatBottom'].includes(id)
+          if (isRiderPoint && !riderVisible) return null
+          
           const isSelected = measurePoints.some((mp) => mp.id === id && mp.bike === bikeId)
+          const pointColor = isRiderPoint ? '#22c55e' : color
+          
           return (
             <circle
               key={id}
               cx={p.x}
               cy={p.y}
               r={isSelected ? "6" : "4"}
-              fill={isSelected ? "#f39c12" : color}
+              fill={isSelected ? "#f39c12" : pointColor}
               opacity={opacity}
               style={{ cursor: measureMode ? 'pointer' : 'default', pointerEvents: measureMode ? 'all' : 'none' }}
               onClick={(e) => {
@@ -480,6 +488,18 @@ export function BikeVisualization({
             }`}
           >
             {measureMode ? '📏 Messmodus aktiv' : '📏 Messmodus'}
+          </button>
+          
+          {/* Rider Visibility Toggle */}
+          <button
+            onClick={() => setRiderVisible(!riderVisible)}
+            className={`w-full px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              riderVisible
+                ? 'bg-[#22c55e] text-white'
+                : 'bg-muted hover:bg-muted/80'
+            }`}
+          >
+            {riderVisible ? '🚴 Fahrer sichtbar' : '🚴 Fahrer ausgeblendet'}
           </button>
           
           {bikeA && (

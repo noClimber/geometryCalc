@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BikeSelector } from '@/components/bike-selector'
 import { BikeVisualization } from '@/components/bike-visualization'
 import { Button } from '@/components/ui/button'
@@ -75,6 +75,37 @@ export default function Home() {
   const [bikeB, setBikeB] = useState<BikeData | null>(null)
   const [alignmentMode, setAlignmentMode] = useState<AlignmentMode>('bb')
   const [activeTab, setActiveTab] = useState('bikeA')
+  const [isPedaling, setIsPedaling] = useState(false)
+
+  // Auto-increment pedal angle when isPedaling is true
+  useEffect(() => {
+    if (!isPedaling) return
+
+    const interval = setInterval(() => {
+      setBikeA((prev) => ({
+        ...prev,
+        cockpit: {
+          ...prev.cockpit,
+          pedalAngle: (prev.cockpit.pedalAngle + 1) % 360,
+        },
+      }))
+      
+      if (bikeB) {
+        setBikeB((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            cockpit: {
+              ...prev.cockpit,
+              pedalAngle: (prev.cockpit.pedalAngle + 1) % 360,
+            },
+          }
+        })
+      }
+    }, 20) // 1 degree every 0.02s
+
+    return () => clearInterval(interval)
+  }, [isPedaling, bikeB])
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-background">
@@ -142,6 +173,17 @@ export default function Home() {
                 Hinterrad
               </Button>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="text-sm font-medium text-foreground">Animation:</div>
+            <Button
+              variant={isPedaling ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIsPedaling(!isPedaling)}
+            >
+              {isPedaling ? '⏸ Stopp' : '▶ Pedalieren'}
+            </Button>
           </div>
         </div>
 
