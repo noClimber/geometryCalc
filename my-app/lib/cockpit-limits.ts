@@ -1,7 +1,7 @@
 import type { CockpitSetup } from '@/types/bike'
 
 /** Min/Max-Grenzwerte pro Cockpit-Feld (mm bzw. Grad). */
-export const COCKPIT_LIMITS: Record<keyof CockpitSetup, { min: number; max: number; step?: number }> = {
+export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>, { min: number; max: number; step?: number }> = {
   spacerHeight:   { min: 0,   max: 5000,  step: 5 },  // Spacerhöhe (mm)
   headsetCap:     { min: 0,   max: 15,  step: 1 },  // Steuersatzabdeckung (mm)
   stemLength:     { min: 40,  max: 1500, step: 5 }, // Vorbaulänge (mm)
@@ -16,7 +16,7 @@ export const COCKPIT_LIMITS: Record<keyof CockpitSetup, { min: number; max: numb
  * Begrenzt einen Cockpit-Wert auf die erlaubte Min/Max-Spanne.
  */
 export function clampCockpitValue(
-  field: keyof CockpitSetup,
+  field: Exclude<keyof CockpitSetup, 'handPosition'>,
   value: number
 ): number {
   const { min, max } = COCKPIT_LIMITS[field]
@@ -36,5 +36,6 @@ export function clampCockpitSetup(cockpit: CockpitSetup): CockpitSetup {
     handlebarDrop:  clampCockpitValue('handlebarDrop', cockpit.handlebarDrop),
     crankLength:    clampCockpitValue('crankLength',    cockpit.crankLength),
     pedalAngle:     clampCockpitValue('pedalAngle',     cockpit.pedalAngle),
+    handPosition:   cockpit.handPosition ?? 'hoods',
   }
 }

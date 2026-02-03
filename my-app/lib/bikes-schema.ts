@@ -15,6 +15,14 @@ export const bikeGeometrySchema = z.object({
   frontCenter: z.number().optional(),
 })
 
+/** Zod-Schema für Fahrerdaten. */
+export const riderSetupSchema = z.object({
+  riderHeight: z.number(),
+  riderInseam: z.number(),
+  torsoAngle: z.number(),
+  shoeThickness: z.number(),
+})
+
 /**
  * Schema für die komplette Bike-Datenstruktur:
  * Marke -> Modell -> Größe -> Geometrie

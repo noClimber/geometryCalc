@@ -12,11 +12,12 @@ import type {
   BikeData,
   BikeGeometry,
   CockpitSetup,
+  RiderSetup,
   AlignmentMode,
   AvailableBikesMap,
 } from '@/types/bike'
 
-export type { BikeData, BikeGeometry, CockpitSetup, AlignmentMode } from '@/types/bike'
+export type { BikeData, BikeGeometry, CockpitSetup, RiderSetup, AlignmentMode } from '@/types/bike'
 
 /** Laufzeit-validierte Bike-Daten (Zod). Bei ungültiger JSON wird {} verwendet. */
 const AVAILABLE_BIKES = parseBikesData(bikesData)
@@ -30,10 +31,18 @@ const DEFAULT_COCKPIT: CockpitSetup = {
   handlebarDrop: 125,
   crankLength: 172.5,
   pedalAngle: 0,
+  handPosition: 'hoods',
+}
+
+const DEFAULT_RIDER: RiderSetup = {
+  riderHeight: 1800,
+  riderInseam: 840,
+  torsoAngle: 40,
+  shoeThickness: 15,
 }
 
 // Animation interval for pedal auto-rotation (milliseconds)
-const PEDAL_ANIM_INTERVAL_MS = 5
+const PEDAL_ANIM_INTERVAL_MS = 30
 
 function getFirstAvailableBike(): BikeData | null {
   const brand = Object.keys(AVAILABLE_BIKES)[0]
@@ -50,6 +59,7 @@ function getFirstAvailableBike(): BikeData | null {
     size,
     geometry,
     cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }),
+    rider: { ...DEFAULT_RIDER },
   }
 }
 
@@ -72,6 +82,7 @@ export default function Home() {
         seatTubeLength: 0,
       },
       cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }),
+      rider: { ...DEFAULT_RIDER },
     }
   })
 

@@ -65,9 +65,7 @@ const SADDLE_SETBACK = 30 // mm
 // Pedale
 const PEDAL_WIDTH = 50 // mm (Gesamt-Breite der Pedal-Anzeige)
 
-// Fahrerdaten
-const RIDER_INSEAM = 890 // mm (Innenbeinlänge vom Schritt bis Fußsohle)
-const RIDER_HEIGHT = 1800 // mm (Gesamtkörpergröße)
+// Fahrerdaten - HINWEIS: Körpergröße, Schrittlänge, Oberkörperwinkel und Schuhdicke kommen jetzt aus bike.rider
 const UPPER_LEG_RATIO = 0.53 // Oberschenkel-Anteil an Innenbeinlänge
 const LOWER_LEG_RATIO = 0.47 // Unterschenkel-Anteil an Innenbeinlänge
 
@@ -77,11 +75,9 @@ const NECK_RATIO = 0.055 // Halslänge als Anteil der Körpergröße
 const HEAD_WIDTH_RATIO = 0.7 // Kopfbreite relativ zur Kopfhöhe
 const UPPER_ARM_RATIO = 0.186 // Oberarm-Länge als Anteil der Körpergröße (ca. 18.6%)
 const LOWER_ARM_RATIO = 0.146 // Unterarm-Länge als Anteil der Körpergröße (ca. 14.6%)
-const TORSO_ANGLE = 30 // Grad (Oberkörperneigung relativ zur X-Achse)
 
 // Schuh & Cleat (Kontaktpunkt Fuß-Pedal)
 const CLEAT_SETBACK = 120 // mm (Abstand Pedalachse → Fußballen, nach hinten)
-const CLEAT_DROP = 15 // mm (Vertikaler Abstand Pedalachse → Fußsohle)
 const FOOT_ANGLE_DEFAULT = 10 // Grad (Standard-Fußwinkel, leicht nach unten)
 
 const SHOE_EXT_AFT = 20 // mm (Wie weit über den Cleat hinaus zeigt der Schuh nach hinten?)
@@ -123,7 +119,7 @@ export function calculateBikeGeometry(
   bike: BikeData,
   alignmentMode: AlignmentMode
 ): BikeGeometryResult {
-  const { geometry, cockpit } = bike
+  const { geometry, cockpit, rider } = bike
   const {
     stack,
     reach,
@@ -133,6 +129,12 @@ export function calculateBikeGeometry(
     chainstayLength = DEFAULT_CHAINSTAY_LENGTH,
     frontCenter = DEFAULT_FRONT_CENTER,
   } = geometry
+
+  // Fahrerdaten aus bike.rider extrahieren
+  const RIDER_HEIGHT = rider.riderHeight
+  const RIDER_INSEAM = rider.riderInseam
+  const TORSO_ANGLE = rider.torsoAngle
+  const CLEAT_DROP = rider.shoeThickness
 
   const points: Record<string, Point2D> = {}
   const segments: Segment[] = []
@@ -229,6 +231,12 @@ export function calculateBikeGeometry(
 
   // Lenker-Drop als Halbkreis-Bogen
   createHandlebarArc(points, segments, cockpit.handlebarDrop)
+  
+  // Endpunkt des Lenkerbogens (für Drops-Griffposition)
+  const dropEndId = `handlebarArc${HANDLEBAR_ARC_STEPS}`
+  if (points[dropEndId]) {
+    points.handlebarDropEnd = points[dropEndId]
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // 4. SATTEL & SATTELSTÜTZE
@@ -430,8 +438,10 @@ export function calculateBikeGeometry(
     y: points.neckTop.y - (headHeight / 2) * Math.sin(neckAngle),
   }
   
-  // Arme: Inverse Kinematik von Schulter zu handlebarCenter
-  const handPos = points.handlebarCenter
+  // Arme: Inverse Kinematik von Schulter zu handlebarCenter oder handlebarDropEnd
+  const handPos = cockpit.handPosition === 'drops' && points.handlebarDropEnd
+    ? points.handlebarDropEnd
+    : points.handlebarCenter
   const shoulderPos = points.shoulder
   
   const armDx = handPos.x - shoulderPos.x
@@ -525,7 +535,7 @@ export function calculateBikeGeometry(
     { from: 'shoulder', to: 'neckTop' },            // Hals
     // Arme
     { from: 'shoulder', to: 'elbow' },              // Oberarm
-    { from: 'elbow', to: 'handlebarCenter' },       // Unterarm
+    { from: 'elbow', to: cockpit.handPosition === 'drops' && points.handlebarDropEnd ? 'handlebarDropEnd' : 'handlebarCenter' },  // Unterarm
   ]
 
   return { points, segments, riderSegments }

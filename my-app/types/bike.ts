@@ -20,6 +20,14 @@ export type CockpitSetup = {
   handlebarDrop: number
   crankLength: number
   pedalAngle: number
+  handPosition: 'hoods' | 'drops'
+}
+
+export type RiderSetup = {
+  riderHeight: number
+  riderInseam: number
+  torsoAngle: number
+  shoeThickness: number
 }
 
 export type BikeData = {
@@ -28,6 +36,7 @@ export type BikeData = {
   size: string
   geometry: BikeGeometry
   cockpit: CockpitSetup
+  rider: RiderSetup
 }
 
 export type AlignmentMode = 'bb' | 'rear'

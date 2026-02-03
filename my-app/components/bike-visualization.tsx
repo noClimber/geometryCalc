@@ -495,46 +495,46 @@ export function BikeVisualization({
         </svg>
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-3 space-y-2">
+        <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-2 space-y-1.5 text-xs">
           {/* Measure Mode Toggle */}
           <button
             onClick={() => {
               setMeasureMode(!measureMode)
               setMeasurePoints([])
             }}
-            className={`w-full px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            className={`w-full px-2 py-1 rounded text-xs font-medium transition-colors ${
               measureMode
                 ? 'bg-[#f39c12] text-white'
                 : 'bg-muted hover:bg-muted/80'
             }`}
           >
-            {measureMode ? '📏 Messmodus aktiv' : '📏 Messmodus'}
+            {measureMode ? '📏 Aktiv' : '📏 Messen'}
           </button>
           
           {/* Rider Visibility Toggle */}
           <button
             onClick={() => setRiderVisible(!riderVisible)}
-            className={`w-full px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            className={`w-full px-2 py-1 rounded text-xs font-medium transition-colors ${
               riderVisible
                 ? 'bg-[#22c55e] text-white'
                 : 'bg-muted hover:bg-muted/80'
             }`}
           >
-            {riderVisible ? '🚴 Fahrer sichtbar' : '🚴 Fahrer ausgeblendet'}
+            {riderVisible ? '🚴 An' : '🚴 Aus'}
           </button>
           
           {bikeA && (
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-4 h-4 rounded-full bg-[#e74c3c]" />
-              <span className="font-medium">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
+              <span className="font-medium text-[10px]">
                 {bikeA.brand} {bikeA.model} ({bikeA.size})
               </span>
             </div>
           )}
           {bikeB && (
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-4 h-4 rounded-full bg-[#3498db]" />
-              <span className="font-medium">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-[#3498db]" />
+              <span className="font-medium text-[10px]">
                 {bikeB.brand} {bikeB.model} ({bikeB.size})
               </span>
             </div>
