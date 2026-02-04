@@ -7,13 +7,25 @@ import {
   WHEEL_POINT_IDS,
   KEY_POINT_IDS,
   SCALE,
+} from '@/lib/bike-geometry'
+import {
   KNEE_90_MIN,
   KNEE_90_MAX,
   KNEE_90_MIN_WARNING,
   KNEE_90_MAX_WARNING,
   KNEE_270_MIN,
   KNEE_270_MIN_WARNING,
-} from '@/lib/bike-geometry'
+  SADDLE_HANDLEBAR_DROP_WARNING,
+  SADDLE_HANDLEBAR_DROP_CRITICAL,
+  KNEE_PEDAL_X_MIN_WARNING,
+  SHOULDER_ANGLE_MIN,
+  SHOULDER_ANGLE_MIN_WARNING,
+  SHOULDER_ANGLE_MAX_WARNING,
+  SHOULDER_ANGLE_MAX,
+  ELBOW_ANGLE_MIN_WARNING,
+  ELBOW_ANGLE_MAX_WARNING,
+  ELBOW_ANGLE_CRITICAL,
+} from '@/lib/warning-thresholds'
 import { Card } from '@/components/ui/card'
 import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } from 'react'
 
@@ -586,8 +598,8 @@ export function BikeVisualization({
           {/* Saddle-Handlebar Drop (Überhöhung) */}
           {geometryA?.saddleHandlebarDrop !== undefined && (() => {
             const drop = geometryA.saddleHandlebarDrop
-            const isRed = drop > 130
-            const isYellow = !isRed && drop > 90
+            const isRed = drop > SADDLE_HANDLEBAR_DROP_CRITICAL
+            const isYellow = !isRed && drop > SADDLE_HANDLEBAR_DROP_WARNING
             return (
               <div 
                 className="px-2 py-1 rounded text-[10px]"
@@ -609,7 +621,7 @@ export function BikeVisualization({
           {/* Knee to Pedal X Distance at 0° */}
           {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && (() => {
             const distance = geometryA.kneeTopedalXAt0
-            const isYellow = distance < 0
+            const isYellow = distance < KNEE_PEDAL_X_MIN_WARNING
             return (
               <div 
                 className="px-2 py-1 rounded text-[10px]"
@@ -622,6 +634,52 @@ export function BikeVisualization({
               >
                 <span className="font-medium">Knie→Pedal @ 0°: </span>
                 <span className="font-bold">{distance.toFixed(0)} mm</span>
+              </div>
+            )
+          })()}
+          
+          {/* Shoulder Angle */}
+          {riderVisible && geometryA?.shoulderAngle !== undefined && (() => {
+            const angle = geometryA.shoulderAngle
+            const isRed = angle < SHOULDER_ANGLE_MIN || angle > SHOULDER_ANGLE_MAX
+            const isYellow = !isRed && ((angle >= SHOULDER_ANGLE_MIN && angle < SHOULDER_ANGLE_MIN_WARNING) || (angle > SHOULDER_ANGLE_MAX_WARNING && angle <= SHOULDER_ANGLE_MAX))
+            return (
+              <div 
+                className="px-2 py-1 rounded text-[10px]"
+                style={{
+                  backgroundColor: isRed 
+                    ? 'hsl(0 84% 60%)' 
+                    : isYellow 
+                      ? 'hsl(45 93% 47%)'
+                      : 'hsl(var(--muted) / 0.5)',
+                  color: isRed || isYellow ? 'white' : 'inherit'
+                }}
+              >
+                <span className="font-medium">Schulterwinkel: </span>
+                <span className="font-bold">{angle.toFixed(1)}°</span>
+              </div>
+            )
+          })()}
+          
+          {/* Elbow Angle */}
+          {riderVisible && geometryA?.elbowAngle !== undefined && (() => {
+            const angle = geometryA.elbowAngle
+            const isRed = angle > ELBOW_ANGLE_CRITICAL
+            const isYellow = !isRed && ((angle >= ELBOW_ANGLE_MAX_WARNING && angle <= ELBOW_ANGLE_CRITICAL) || angle < ELBOW_ANGLE_MIN_WARNING)
+            return (
+              <div 
+                className="px-2 py-1 rounded text-[10px]"
+                style={{
+                  backgroundColor: isRed 
+                    ? 'hsl(0 84% 60%)' 
+                    : isYellow 
+                      ? 'hsl(45 93% 47%)'
+                      : 'hsl(var(--muted) / 0.5)',
+                  color: isRed || isYellow ? 'white' : 'inherit'
+                }}
+              >
+                <span className="font-medium">Ellbogenwinkel: </span>
+                <span className="font-bold">{angle.toFixed(1)}°</span>
               </div>
             )
           })()}

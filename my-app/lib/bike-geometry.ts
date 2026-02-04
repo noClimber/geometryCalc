@@ -20,6 +20,8 @@ export type BikeGeometryResult = {
   kneeAngleAt270?: number // Kniewinkel bei Pedalwinkel 270°
   saddleHandlebarDrop?: number // Überhöhung: Y-Abstand Sattel zu Lenker in mm
   kneeTopedalXAt0?: number // X-Abstand Knie zu Pedal bei 0° Pedalstellung in mm
+  shoulderAngle?: number // Schulterwinkel: Hüftgelenk→Schulter→Ellbogen in Grad
+  elbowAngle?: number // Ellbogenwinkel: Schulter→Ellbogen→Hand in Grad
 }
 
 /** Punkt-IDs, die als Räder gezeichnet werden (Kreise). */
@@ -98,15 +100,18 @@ const FOOT_ANGLE_DEFAULT = 10    // Grad - Standard-Fußwinkel (leicht nach unte
 const SHOE_EXT_AFT = 20          // mm - Schuh-Verlängerung hinter Cleat (aktuell ungenutzt)
 
 // ════════════════════════════════════════════════════════════════════════════
-// Kniewinkel-Schwellen (können bei Bedarf angepasst werden)
+// Warnschwellen für biomechanische Messungen
+// ════════════════════════════════════════════════════════════════════════════
 
-export const KNEE_270_MIN_WARNING = 67 // Grad
-export const KNEE_270_MIN = 60 // Grad
-
-export const KNEE_90_MIN_WARNING = 137 // Grad
-export const KNEE_90_MAX_WARNING = 149 // Grad
-export const KNEE_90_MIN = 134 // Grad
-export const KNEE_90_MAX = 153 // Grad
+// Re-exportiere Schwellenwerte aus zentraler Definition
+export {
+  KNEE_90_MIN,
+  KNEE_90_MAX,
+  KNEE_90_MIN_WARNING,
+  KNEE_90_MAX_WARNING,
+  KNEE_270_MIN,
+  KNEE_270_MIN_WARNING,
+} from './warning-thresholds'
 
 // HELPER FUNCTIONS
 // ════════════════════════════════════════════════════════════════════════════
@@ -879,6 +884,38 @@ export function calculateBikeGeometry(
   // X-Abstand: Knie zu Pedal (in mm, positiv = Knie vor Pedal)
   const kneeTopedalXAt0 = -(kneePosAt0.x - pedalAt0.x) / SCALE
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCHULTERWINKEL: Winkel zwischen Hüftgelenk→Schulter und Schulter→Ellbogen
+  // ──────────────────────────────────────────────────────────────────────────
+  const shoulderToHip = {
+    x: hipJointPos.x - shoulderPos.x,
+    y: hipJointPos.y - shoulderPos.y,
+  }
+  const shoulderToElbow = {
+    x: elbowPos.x - shoulderPos.x,
+    y: elbowPos.y - shoulderPos.y,
+  }
+  const angleToHip = Math.atan2(shoulderToHip.y, shoulderToHip.x)
+  const angleToElbow = Math.atan2(shoulderToElbow.y, shoulderToElbow.x)
+  let shoulderAngle = Math.abs((angleToElbow - angleToHip) * 180 / Math.PI)
+  if (shoulderAngle > 180) shoulderAngle = 360 - shoulderAngle
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ELLBOGENWINKEL: Winkel zwischen Schulter→Ellbogen und Ellbogen→Hand
+  // ──────────────────────────────────────────────────────────────────────────
+  const elbowToShoulder = {
+    x: shoulderPos.x - elbowPos.x,
+    y: shoulderPos.y - elbowPos.y,
+  }
+  const elbowToHand = {
+    x: handPos.x - elbowPos.x,
+    y: handPos.y - elbowPos.y,
+  }
+  const angleToShoulder = Math.atan2(elbowToShoulder.y, elbowToShoulder.x)
+  const angleToHand = Math.atan2(elbowToHand.y, elbowToHand.x)
+  let elbowAngle = Math.abs((angleToHand - angleToShoulder) * 180 / Math.PI)
+  if (elbowAngle > 180) elbowAngle = 360 - elbowAngle
+
   return { 
     points, 
     segments, 
@@ -887,7 +924,9 @@ export function calculateBikeGeometry(
     kneeAngleAt90, 
     kneeAngleAt270,
     saddleHandlebarDrop,
-    kneeTopedalXAt0
+    kneeTopedalXAt0,
+    shoulderAngle,
+    elbowAngle
   }
 }
 
