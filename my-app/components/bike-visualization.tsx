@@ -46,6 +46,7 @@ export function BikeVisualization({
   const [measurePoints, setMeasurePoints] = useState<Array<{id: string, bike: 'A' | 'B'}>>([])
   const [measureMode, setMeasureMode] = useState(false)
   const [riderVisible, setRiderVisible] = useState(true)
+  const [measurementsExpanded, setMeasurementsExpanded] = useState(true)
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -394,18 +395,26 @@ export function BikeVisualization({
   }
 
   return (
-    <Card className="h-full bg-card p-6">
-      <div 
-        className="h-full w-full relative overflow-hidden cursor-grab active:cursor-grabbing"
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* SVG Area */}
+      <Card 
+        className="bg-card p-6 overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          flex: '1 1 auto',
+          minHeight: 0,
+        }}
       >
+        <div 
+          className="h-full w-full relative overflow-hidden cursor-grab active:cursor-grabbing"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
         {/* Grid background */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
@@ -512,7 +521,7 @@ export function BikeVisualization({
           </g>
         </svg>
 
-        {/* Legend */}
+        {/* Control Buttons */}
         <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-2 space-y-1.5 text-xs">
           {/* Measure Mode Toggle */}
           <button
@@ -541,13 +550,62 @@ export function BikeVisualization({
             {riderVisible ? '🚴 An' : '🚴 Aus'}
           </button>
           
-          {/* Knee Angle Display (Debug) */}
-          {riderVisible && geometryA?.kneeAngle !== undefined && (
-            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
-              <span className="font-medium">Kniewinkel: </span>
-              <span className="text-primary font-bold">{geometryA.kneeAngle.toFixed(1)}°</span>
+          {/* Toggle Measurements */}
+          <button
+            onClick={() => setMeasurementsExpanded(!measurementsExpanded)}
+            className="w-full px-2 py-1 rounded text-xs font-medium transition-colors bg-muted hover:bg-muted/80"
+          >
+            {measurementsExpanded ? '▼ Einklappen' : '▲ Messungen'}
+          </button>
+          
+          {/* Bike Info */}
+          {bikeA && (
+            <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
+              <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
+              <span className="font-medium text-[10px]">
+                {bikeA.brand} {bikeA.model} ({bikeA.size})
+              </span>
             </div>
           )}
+          {bikeB && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-[#3498db]" />
+              <span className="font-medium text-[10px]">
+                {bikeB.brand} {bikeB.model} ({bikeB.size})
+              </span>
+            </div>
+          )}
+        </div>
+        </div>
+      </Card>
+
+      {/* Measurements Section - Collapsible */}
+      <div 
+        className="grid grid-cols-2 gap-4 mt-4 transition-all duration-300 ease-in-out overflow-hidden"
+        style={{
+          maxHeight: measurementsExpanded ? '30vh' : '0',
+          opacity: measurementsExpanded ? 1 : 0,
+          marginTop: measurementsExpanded ? '1rem' : '0',
+        }}
+      >
+        <Card className="p-4 overflow-y-auto max-h-96">
+          <h3 className="text-sm font-semibold mb-2">Hinweise</h3>
+          <div className="text-xs text-muted-foreground">
+            {/* Placeholder - wird später gefüllt */}
+          </div>
+        </Card>
+
+        {/* Right: Measurements */}
+        <Card className="p-4 overflow-y-auto max-h-96">
+          <h3 className="text-sm font-semibold mb-2">Messungen</h3>
+          <div className="space-y-1.5">
+            {/* Knee Angle Display */}
+            {riderVisible && geometryA?.kneeAngle !== undefined && (
+              <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
+                <span className="font-medium">Kniewinkel: </span>
+                <span className="text-primary font-bold">{geometryA.kneeAngle.toFixed(1)}°</span>
+              </div>
+            )}
           
           {/* Knee Angle at 90° */}
           {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
@@ -683,25 +741,9 @@ export function BikeVisualization({
               </div>
             )
           })()}
-          
-          {bikeA && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
-              <span className="font-medium text-[10px]">
-                {bikeA.brand} {bikeA.model} ({bikeA.size})
-              </span>
-            </div>
-          )}
-          {bikeB && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#3498db]" />
-              <span className="font-medium text-[10px]">
-                {bikeB.brand} {bikeB.model} ({bikeB.size})
-              </span>
-            </div>
-          )}
-        </div>
+          </div>
+        </Card>
       </div>
-    </Card>
+    </div>
   )
 }
