@@ -1,4 +1,9 @@
 import type { BikeData, AlignmentMode } from '@/types/bike'
+import {
+  COCKPIT_CONSTANTS,
+  SADDLE_CONSTANTS,
+  PEDAL_CONSTANTS,
+} from '@/lib/defaults'
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES & CONSTANTS
@@ -57,23 +62,6 @@ export const KEY_POINT_IDS = [
 
 // Skalierungsfaktor: mm → SVG-Einheiten
 export const SCALE = 0.8
-
-// Default-Werte für fehlende Geometriedaten
-const DEFAULT_FRONT_CENTER = 600
-const DEFAULT_CHAINSTAY_LENGTH = 410
-const DEFAULT_HEADTUBE_LENGTH = 0
-
-// Cockpit-Konstanten
-const HEADSET_BEARING_DIAMETER = 31.8 // mm
-const HANDLEBAR_ARC_STEPS = 12
-
-// Sattel & Sattelstütze
-const SEATPOST_LENGTH = 240 // mm
-const SADDLE_LENGTH = 255 // mm
-const SADDLE_SETBACK = 40 // mm
-
-// Pedale
-const PEDAL_WIDTH = 50 // mm (Gesamt-Breite der Pedal-Anzeige)
 
 // ──────────────────────────────────────────────────────────────────────────
 // FAHRER-ANATOMIE
@@ -267,8 +255,8 @@ export function calculateBikeGeometry(
     headTubeAngle,
     seatTubeAngle,
     bbDrop,
-    chainstayLength = DEFAULT_CHAINSTAY_LENGTH,
-    frontCenter = DEFAULT_FRONT_CENTER,
+    chainstayLength,
+    frontCenter,
   } = geometry
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -297,7 +285,7 @@ export function calculateBikeGeometry(
 
   // Unterkante Steuerrohr (entlang Lenkkopfwinkel)
   const headTubeAngleRad = toRadians(headTubeAngle)
-  const headTubeLen = (geometry.headTubeLength ?? DEFAULT_HEADTUBE_LENGTH) * SCALE
+  const headTubeLen = (geometry.headTubeLength ?? 0) * SCALE
   points.headTubeBottom = {
     x: points.headTubeTop.x + Math.cos(headTubeAngleRad) * headTubeLen,
     y: points.headTubeTop.y + Math.sin(headTubeAngleRad) * headTubeLen,
@@ -342,7 +330,7 @@ export function calculateBikeGeometry(
   const spacerStackHeight = (
     cockpit.spacerHeight +
     cockpit.headsetCap +
-    HEADSET_BEARING_DIAMETER / 2
+    COCKPIT_CONSTANTS.headsetBearingDiameter / 2
   ) * SCALE
   
   const spacerOffsetX = spacerStackHeight * Math.cos(headTubeAngleRad)
@@ -376,7 +364,7 @@ export function calculateBikeGeometry(
   createHandlebarArc(points, segments, cockpit.handlebarDrop)
   
   // Endpunkt des Lenkerbogens (für Drops-Griffposition)
-  const dropEndId = `handlebarArc${HANDLEBAR_ARC_STEPS}`
+  const dropEndId = `handlebarArc${COCKPIT_CONSTANTS.handlebarArcSteps}`
   if (points[dropEndId]) {
     points.handlebarDropEnd = points[dropEndId]
   }
@@ -391,8 +379,8 @@ export function calculateBikeGeometry(
     y: points.seatTubeTop.y - Math.sin(seatTubeAngleRad) * seatPostLength,
   }
 
-  const saddleSetback = SADDLE_SETBACK * SCALE
-  const saddleLength = SADDLE_LENGTH * SCALE
+  const saddleSetback = SADDLE_CONSTANTS.saddleSetback * SCALE
+  const saddleLength = SADDLE_CONSTANTS.saddleLength * SCALE
   
   points.saddleLenFwd = {
     x: points.seatPostTop.x + saddleLength / 2 - saddleSetback,
@@ -429,7 +417,7 @@ export function calculateBikeGeometry(
   }
 
   // Pedal-Anzeige (horizontale Linien an Kurbelenden)
-  const pedalHalfWidth = (PEDAL_WIDTH / 2) * SCALE
+  const pedalHalfWidth = (PEDAL_CONSTANTS.pedalWidth / 2) * SCALE
   
   points.pedalRightTop = {
     x: points.pedalRight.x - pedalHalfWidth,
@@ -955,8 +943,8 @@ function createHandlebarArc(
 
   const arcIds: string[] = []
   
-  for (let i = 0; i <= HANDLEBAR_ARC_STEPS; i++) {
-    const progress = i / HANDLEBAR_ARC_STEPS
+  for (let i = 0; i <= COCKPIT_CONSTANTS.handlebarArcSteps; i++) {
+    const progress = i / COCKPIT_CONSTANTS.handlebarArcSteps
     const angle = -Math.PI / 2 + progress * Math.PI // -90° bis +90°
     
     const pointId = `handlebarArc${i}`

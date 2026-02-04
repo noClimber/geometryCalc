@@ -74,6 +74,8 @@ export default function Home() {
         bbDrop: 0,
         headTubeLength: 0,
         seatTubeLength: 0,
+        chainstayLength: 0,
+        frontCenter: 0,
       },
       cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }),
       rider: { ...DEFAULT_RIDER },

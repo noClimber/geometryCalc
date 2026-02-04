@@ -7,8 +7,8 @@ export type BikeGeometry = {
   bbDrop: number
   headTubeLength: number
   seatTubeLength: number
-  chainstayLength?: number
-  frontCenter?: number
+  chainstayLength: number
+  frontCenter: number
 }
 
 export type CockpitSetup = {

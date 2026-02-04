@@ -22,25 +22,46 @@ export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>,
 
 /** Default-Werte für das Cockpit-Setup. */
 export const DEFAULT_COCKPIT: CockpitSetup = {
-  spacerHeight: 20,       // 20mm Spacer
+  spacerHeight: 30,       // 30mm Spacer
   headsetCap: 5,          // 5mm Steuersatzabdeckung
-  stemLength: 110,        // 110mm Vorbau
+  stemLength: 80,        // 80mm Vorbau
   stemAngle: -6,          // -6° Vorbauwinkel
-  handlebarReach: 80,     // 80mm Lenker Reach
+  handlebarReach: 75,     // 75mm Lenker Reach
   handlebarDrop: 125,     // 125mm Lenker Drop
-  crankLength: 170,       // 165mm Kurbellänge
-  pedalAngle: 23,         // 23° Pedalwinkel
+  crankLength: 165,       // 165mm Kurbellänge
+  pedalAngle: 0,         // 0° Pedalwinkel
   handPosition: 'hoods',  // Standard: Hoods
-  seatPostLength: 240,    // 240mm Sattelstütze
+  seatPostLength: 210,    // 240mm Sattelstütze
 }
 
 /** Default-Werte für die Fahrerdaten. */
 export const DEFAULT_RIDER: RiderSetup = {
-  riderHeight: 1800,    // 1800mm (180cm)
-  riderInseam: 840,     // 840mm (84cm)
-  torsoAngle: 40,       // 40° Oberkörperwinkel
+  riderHeight: 1830,    // 1830mm (183cm)
+  riderInseam: 890,     // 890mm (89cm)
+  torsoAngle: 30,       // 30° Oberkörperwinkel
   shoeThickness: 15,    // 15mm Schuhdicke
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// KOMPONENTEN DEFAULTS
+// ══════════════════════════════════════════════════════════════════════════
+
+/** Cockpit-Konstanten (mm). */
+export const COCKPIT_CONSTANTS = {
+  headsetBearingDiameter: 31.8,  // Steuersatzlager-Durchmesser
+  handlebarArcSteps: 12,         // Anzahl Segmente für Lenker-Bogen
+} as const
+
+/** Sattel & Sattelstütze Konstanten (mm). */
+export const SADDLE_CONSTANTS = {
+  saddleLength: 255,     // Sattellänge
+  saddleSetback: 50,     // Sattel-Versatz nach hinten
+} as const
+
+/** Pedal-Konstanten (mm). */
+export const PEDAL_CONSTANTS = {
+  pedalWidth: 50,        // Pedal-Breite (Gesamt-Breite der Pedal-Anzeige)
+} as const
 
 /**
  * Begrenzt einen Cockpit-Wert auf die erlaubte Min/Max-Spanne.
