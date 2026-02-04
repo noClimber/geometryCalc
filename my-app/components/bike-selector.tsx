@@ -2,7 +2,7 @@
 
 import type { BikeData, BikeGeometry, CockpitSetup, RiderSetup } from '@/types/bike'
 import type { AvailableBikesMap } from '@/types/bike'
-import { COCKPIT_LIMITS, clampCockpitValue, clampCockpitSetup } from '@/lib/cockpit-limits'
+import { COCKPIT_LIMITS, clampCockpitValue, clampCockpitSetup, DEFAULT_COCKPIT, DEFAULT_RIDER } from '@/lib/defaults'
 import {
   Select,
   SelectContent,
@@ -22,26 +22,6 @@ type BikeSelectorProps = {
   availableBikes: AvailableBikesMap
   /** Wenn false, wird "Kein Bike" nicht angeboten (z. B. für Bike A). */
   allowClear?: boolean
-}
-
-const DEFAULT_COCKPIT: CockpitSetup = {
-  spacerHeight: 20,
-  headsetCap: 5,
-  stemLength: 110,
-  stemAngle: -6,
-  handlebarReach: 80,
-  handlebarDrop: 125,
-  crankLength: 172.5,
-  pedalAngle: 23,
-  handPosition: 'hoods',
-  seatPostLength: 240,
-}
-
-const DEFAULT_RIDER: RiderSetup = {
-  riderHeight: 1800,
-  riderInseam: 840,
-  torsoAngle: 40,
-  shoeThickness: 15,
 }
 
 export function BikeSelector({

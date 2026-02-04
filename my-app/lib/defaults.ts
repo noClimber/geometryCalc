@@ -1,4 +1,11 @@
-import type { CockpitSetup } from '@/types/bike'
+import type { CockpitSetup, RiderSetup } from '@/types/bike'
+
+/** Default-Bike-Auswahl beim Start. */
+export const DEFAULT_BIKE_SELECTION = {
+  brand: 'Cannondale',
+  model: 'SuperSix Evo4',
+  size: '58',
+} as const
 
 /** Min/Max-Grenzwerte pro Cockpit-Feld (mm bzw. Grad). */
 export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>, { min: number; max: number; step?: number }> = {
@@ -11,6 +18,28 @@ export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>,
   crankLength:    { min: 165, max: 175, step: 2.5 }, // Kurbellänge (mm)
   pedalAngle:     { min: 0,   max: 360, step: 15 },  // Pedalwinkel (Grad)
   seatPostLength: { min: 100, max: 400, step: 5 },  // Sattelstütze (mm)
+}
+
+/** Default-Werte für das Cockpit-Setup. */
+export const DEFAULT_COCKPIT: CockpitSetup = {
+  spacerHeight: 20,       // 20mm Spacer
+  headsetCap: 5,          // 5mm Steuersatzabdeckung
+  stemLength: 110,        // 110mm Vorbau
+  stemAngle: -6,          // -6° Vorbauwinkel
+  handlebarReach: 80,     // 80mm Lenker Reach
+  handlebarDrop: 125,     // 125mm Lenker Drop
+  crankLength: 170,       // 165mm Kurbellänge
+  pedalAngle: 23,         // 23° Pedalwinkel
+  handPosition: 'hoods',  // Standard: Hoods
+  seatPostLength: 240,    // 240mm Sattelstütze
+}
+
+/** Default-Werte für die Fahrerdaten. */
+export const DEFAULT_RIDER: RiderSetup = {
+  riderHeight: 1800,    // 1800mm (180cm)
+  riderInseam: 840,     // 840mm (84cm)
+  torsoAngle: 40,       // 40° Oberkörperwinkel
+  shoeThickness: 15,    // 15mm Schuhdicke
 }
 
 /**

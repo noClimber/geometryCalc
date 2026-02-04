@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import bikesData from '@/data/bikes.json'
 import { parseBikesData } from '@/lib/bikes-schema'
-import { clampCockpitSetup } from '@/lib/cockpit-limits'
+import { clampCockpitSetup, DEFAULT_COCKPIT, DEFAULT_RIDER, DEFAULT_BIKE_SELECTION } from '@/lib/defaults'
 import type {
   BikeData,
   BikeGeometry,
@@ -22,38 +22,31 @@ export type { BikeData, BikeGeometry, CockpitSetup, RiderSetup, AlignmentMode } 
 /** Laufzeit-validierte Bike-Daten (Zod). Bei ungültiger JSON wird {} verwendet. */
 const AVAILABLE_BIKES = parseBikesData(bikesData)
 
-const DEFAULT_COCKPIT: CockpitSetup = {
-  spacerHeight: 20,
-  headsetCap: 5,
-  stemLength: 110,
-  stemAngle: -6,
-  handlebarReach: 80,
-  handlebarDrop: 125,
-  crankLength: 172.5,
-  pedalAngle: 0,
-  handPosition: 'hoods',
-  seatPostLength: 240,
-}
-
-const DEFAULT_RIDER: RiderSetup = {
-  riderHeight: 1800,
-  riderInseam: 840,
-  torsoAngle: 40,
-  shoeThickness: 15,
-}
-
 // Animation interval for pedal auto-rotation (milliseconds)
 const PEDAL_ANIM_INTERVAL_MS = 30
 
 function getFirstAvailableBike(): BikeData | null {
-  const brand = Object.keys(AVAILABLE_BIKES)[0]
-  if (!brand) return null
-  const model = Object.keys(AVAILABLE_BIKES[brand] ?? {})[0]
-  if (!model) return null
-  const size = Object.keys(AVAILABLE_BIKES[brand][model] ?? {})[0]
-  if (!size) return null
-  const geometry = AVAILABLE_BIKES[brand][model][size]
-  if (!geometry) return null
+  const { brand, model, size } = DEFAULT_BIKE_SELECTION
+  const geometry = AVAILABLE_BIKES[brand]?.[model]?.[size]
+  if (!geometry) {
+    // Fallback: Nimm das erste verfügbare Bike
+    const fallbackBrand = Object.keys(AVAILABLE_BIKES)[0]
+    if (!fallbackBrand) return null
+    const fallbackModel = Object.keys(AVAILABLE_BIKES[fallbackBrand] ?? {})[0]
+    if (!fallbackModel) return null
+    const fallbackSize = Object.keys(AVAILABLE_BIKES[fallbackBrand][fallbackModel] ?? {})[0]
+    if (!fallbackSize) return null
+    const fallbackGeometry = AVAILABLE_BIKES[fallbackBrand][fallbackModel][fallbackSize]
+    if (!fallbackGeometry) return null
+    return {
+      brand: fallbackBrand,
+      model: fallbackModel,
+      size: fallbackSize,
+      geometry: fallbackGeometry,
+      cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }),
+      rider: { ...DEFAULT_RIDER },
+    }
+  }
   return {
     brand,
     model,
