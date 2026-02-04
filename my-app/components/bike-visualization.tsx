@@ -583,6 +583,49 @@ export function BikeVisualization({
             )
           })()}
           
+          {/* Saddle-Handlebar Drop (Überhöhung) */}
+          {geometryA?.saddleHandlebarDrop !== undefined && (() => {
+            const drop = geometryA.saddleHandlebarDrop
+            const isRed = drop > 130
+            const isYellow = !isRed && drop > 90
+            return (
+              <div 
+                className="px-2 py-1 rounded text-[10px]"
+                style={{
+                  backgroundColor: isRed 
+                    ? 'hsl(0 84% 60%)' 
+                    : isYellow 
+                      ? 'hsl(45 93% 47%)'
+                      : 'hsl(var(--muted) / 0.5)',
+                  color: isRed || isYellow ? 'white' : 'inherit'
+                }}
+              >
+                <span className="font-medium">Überhöhung: </span>
+                <span className="font-bold">{drop.toFixed(0)} mm</span>
+              </div>
+            )
+          })()}
+          
+          {/* Knee to Pedal X Distance at 0° */}
+          {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && (() => {
+            const distance = geometryA.kneeTopedalXAt0
+            const isYellow = distance < 0
+            return (
+              <div 
+                className="px-2 py-1 rounded text-[10px]"
+                style={{
+                  backgroundColor: isYellow 
+                    ? 'hsl(45 93% 47%)'
+                    : 'hsl(var(--muted) / 0.5)',
+                  color: isYellow ? 'white' : 'inherit'
+                }}
+              >
+                <span className="font-medium">Knie→Pedal @ 0°: </span>
+                <span className="font-bold">{distance.toFixed(0)} mm</span>
+              </div>
+            )
+          })()}
+          
           {bikeA && (
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />

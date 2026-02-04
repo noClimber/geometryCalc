@@ -18,6 +18,8 @@ export type BikeGeometryResult = {
   kneeAngle?: number // Optional: Kniewinkel in Grad (aktueller Pedalwinkel)
   kneeAngleAt90?: number // Kniewinkel bei Pedalwinkel 90°
   kneeAngleAt270?: number // Kniewinkel bei Pedalwinkel 270°
+  saddleHandlebarDrop?: number // Überhöhung: Y-Abstand Sattel zu Lenker in mm
+  kneeTopedalXAt0?: number // X-Abstand Knie zu Pedal bei 0° Pedalstellung in mm
 }
 
 /** Punkt-IDs, die als Räder gezeichnet werden (Kreise). */
@@ -813,7 +815,80 @@ export function calculateBikeGeometry(
     torsoAngle
   )
 
-  return { points, segments, riderSegments, kneeAngle: kneeAngleDegNew, kneeAngleAt90, kneeAngleAt270 }
+  // ──────────────────────────────────────────────────────────────────────────
+  // ÜBERHÖHUNG: Y-Abstand zwischen Sattel und Lenker
+  // ──────────────────────────────────────────────────────────────────────────
+  // Positiver Wert = Sattel höher als Lenker (SVG: Y nach unten positiv)
+  const saddleHandlebarDrop = (points.handlebarCenter.y - points.saddleTop.y) / SCALE
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // KNIE-ZU-PEDAL X-ABSTAND BEI 0° PEDALSTELLUNG
+  // ──────────────────────────────────────────────────────────────────────────
+  // Berechne Knie-Position bei Pedalwinkel 0° (Pedal vorne)
+  const pedalAngle0Rad = toRadians(0)
+  const pedalAt0: Point2D = {
+    x: points.bb.x + Math.cos(pedalAngle0Rad) * crankLength,
+    y: points.bb.y + Math.sin(pedalAngle0Rad) * crankLength,
+  }
+  
+  // Fußposition bei 0° (vereinfacht: gleiche Cleat-Logik wie bei aktueller Pedalstellung)
+  const baseDynamicFootAngleAt0 = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngle0Rad)) / 2
+  const footAngleAt0Rad = toRadians(baseDynamicFootAngleAt0)
+  
+  const cleatBottomAt0: Point2D = {
+    x: pedalAt0.x,
+    y: pedalAt0.y - cleatDrop,
+  }
+  
+  const footPosAt0: Point2D = {
+    x: cleatBottomAt0.x - cleatSetback * Math.cos(footAngleAt0Rad),
+    y: cleatBottomAt0.y - cleatSetback * Math.sin(footAngleAt0Rad),
+  }
+  
+  // Knie-Position via IK bei 0°
+  const dxHipFootAt0 = hipJointPos.x - footPosAt0.x
+  const dyHipFootAt0 = hipJointPos.y - footPosAt0.y
+  const distHipToFootAt0 = Math.sqrt(dxHipFootAt0 * dxHipFootAt0 + dyHipFootAt0 * dyHipFootAt0)
+  
+  let kneePosAt0: Point2D
+  
+  if (distHipToFootAt0 > newTotalLegLength) {
+    const ratio = newLowerLegLength / newTotalLegLength
+    kneePosAt0 = {
+      x: footPosAt0.x + dxHipFootAt0 * ratio,
+      y: footPosAt0.y + dyHipFootAt0 * ratio,
+    }
+  } else if (distHipToFootAt0 < Math.abs(newLowerLegLength - newUpperLegLength)) {
+    kneePosAt0 = {
+      x: (footPosAt0.x + hipJointPos.x) / 2,
+      y: (footPosAt0.y + hipJointPos.y) / 2,
+    }
+  } else {
+    const a = distHipToFootAt0
+    const b = newLowerLegLength
+    const c = newUpperLegLength
+    const cosAlphaAt0 = (a * a + b * b - c * c) / (2 * a * b)
+    const alphaAt0 = Math.acos(Math.max(-1, Math.min(1, cosAlphaAt0)))
+    const baseAngleAt0 = Math.atan2(dyHipFootAt0, dxHipFootAt0)
+    kneePosAt0 = {
+      x: footPosAt0.x + b * Math.cos(baseAngleAt0 + alphaAt0),
+      y: footPosAt0.y + b * Math.sin(baseAngleAt0 + alphaAt0),
+    }
+  }
+  
+  // X-Abstand: Knie zu Pedal (in mm, positiv = Knie vor Pedal)
+  const kneeTopedalXAt0 = -(kneePosAt0.x - pedalAt0.x) / SCALE
+
+  return { 
+    points, 
+    segments, 
+    riderSegments, 
+    kneeAngle: kneeAngleDegNew, 
+    kneeAngleAt90, 
+    kneeAngleAt270,
+    saddleHandlebarDrop,
+    kneeTopedalXAt0
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
