@@ -11,8 +11,8 @@ export const bikeGeometrySchema = z.object({
   bbDrop: z.number(),
   headTubeLength: z.number(),
   seatTubeLength: z.number(),
-  chainstayLength: z.number().optional(),
-  frontCenter: z.number().optional(),
+  chainstayLength: z.number().default(410),
+  frontCenter: z.number().default(580),
 })
 
 /** Zod-Schema für Fahrerdaten. */
@@ -27,7 +27,7 @@ export const riderSetupSchema = z.object({
  * Schema für die komplette Bike-Datenstruktur:
  * Marke -> Modell -> Größe -> Geometrie
  */
-export const availableBikesSchema: z.ZodType<AvailableBikesMap> = z.record(
+export const availableBikesSchema = z.record(
   z.string(),
   z.record(
     z.string(),
