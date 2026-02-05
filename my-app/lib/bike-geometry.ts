@@ -29,6 +29,8 @@ export type BikeGeometryResult = {
   elbowAngle?: number // Ellbogenwinkel: Schulter→Ellbogen→Hand in Grad
   ankleAngle?: number // Sprunggelenkwinkel: cleatBottom→footContact und footContact→kneeNew in Grad
   ankleAngleAt270?: number // Sprunggelenkwinkel bei 270°
+  bbToSaddleDistance?: number // Abstand Tretlager zu Satteloberkante in mm
+  bbToSeatPostDistance?: number // Abstand Tretlager zu SeatPost-Top in mm
 }
 
 /** Punkt-IDs, die als Räder gezeichnet werden (Kreise). */
@@ -120,6 +122,54 @@ function calculateHorizontalDistance(hypotenuse: number, verticalOffset: number)
 }
 
 /**
+ * Berechnet den realistischen Fußwinkel basierend auf dem Pedalwinkel.
+ * Verwendet Cosinus-Interpolation (Smooth Step) zwischen definierten Keyframes.
+ * 
+ * Keyframes (Fußwinkel relativ zur Horizontalen, positiv = Zehen runter):
+ * - 0° (3 Uhr): 10°
+ * - 90° (6 Uhr): 20°
+ * - 180° (9 Uhr): 30°
+ * - 270° (12 Uhr): 22°
+ * 
+ * @param pedalAngleDeg - Pedalwinkel in Grad (0° = vorne, 90° = unten, 180° = hinten, 270° = oben)
+ * @returns Fußwinkel in Grad (positiv = Zehen nach unten)
+ */
+function getRealFootAngle(pedalAngleDeg: number): number {
+  // Normalisiere auf 0-360°
+  const angle = ((pedalAngleDeg % 360) + 360) % 360
+  
+  // Keyframes: [pedalAngle, footAngle]
+  const keyframes: [number, number][] = [
+    [0, 10],
+    [90, 20],
+    [180, 30],
+    [270, 22],
+    [360, 10], // Gleich wie 0° für nahtlose Interpolation
+  ]
+  
+  // Finde die beiden umgebenden Keyframes
+  let startIdx = 0
+  for (let i = 0; i < keyframes.length - 1; i++) {
+    if (angle >= keyframes[i][0] && angle <= keyframes[i + 1][0]) {
+      startIdx = i
+      break
+    }
+  }
+  
+  const [angle1, foot1] = keyframes[startIdx]
+  const [angle2, foot2] = keyframes[startIdx + 1]
+  
+  // Linearer Fortschritt zwischen den Keyframes (0 bis 1)
+  const progress = (angle - angle1) / (angle2 - angle1)
+  
+  // Cosinus-Interpolation (Smooth Step) für weiche Übergänge
+  const smoothProgress = (1 - Math.cos(progress * Math.PI)) / 2
+  
+  // Interpoliere zwischen den Fußwinkeln
+  return foot1 + (foot2 - foot1) * smoothProgress
+}
+
+/**
  * Berechnet den Kniewinkel für einen spezifischen Pedalwinkel.
  * 
  * Verwendet inverse Kinematik (IK) um die Position von Knie und Hüfte zu berechnen,
@@ -157,7 +207,7 @@ function calculateKneeAngleAtPedalAngle(
   // Fußposition (vereinfacht, ohne dynamischen Fußwinkel)
   const cleatSetback = CLEAT_SETBACK * SCALE
   const cleatDropScaled = cleatDrop * SCALE
-  const baseDynamicFootAngle = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngleRad)) / 2
+  const baseDynamicFootAngle = getRealFootAngle(pedalAngleDeg)
   const footAngleRad = toRadians(baseDynamicFootAngle)
   
   const cleatBottomPos: Point2D = {
@@ -460,11 +510,8 @@ export function calculateBikeGeometry(
   const totalLegLength = lowerLegLength + upperLegLength
   const stretch = distPedalToSeat / totalLegLength
   
-  // Dynamischer Fußwinkel basierend auf Pedalposition:
-  // - Bei 90° (unten): voller FOOT_ANGLE_DEFAULT
-  // - Bei 270° (oben): 0° (horizontal)
-  // - Bei 0° und 180°: FOOT_ANGLE_DEFAULT / 2
-  const baseDynamicFootAngle = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngleRad)) / 2
+  // Dynamischer Fußwinkel: biomechanisch realistische Bewegung basierend auf Pedalposition
+  const baseDynamicFootAngle = getRealFootAngle(cockpit.pedalAngle)
   
   const footAngle = stretch > 1.0 
     ? baseDynamicFootAngle + (stretch - 1.0) * 30 // Bei Streckung: Fuß stärker nach unten
@@ -827,7 +874,7 @@ export function calculateBikeGeometry(
   }
   
   // Fußposition bei 0° (vereinfacht: gleiche Cleat-Logik wie bei aktueller Pedalstellung)
-  const baseDynamicFootAngleAt0 = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngle0Rad)) / 2
+  const baseDynamicFootAngleAt0 = getRealFootAngle(0)
   const footAngleAt0Rad = toRadians(baseDynamicFootAngleAt0)
   
   const cleatBottomAt0: Point2D = {
@@ -930,7 +977,7 @@ export function calculateBikeGeometry(
     x: points.bb.x + Math.cos(pedalAngle270Rad) * crankLength,
     y: points.bb.y + Math.sin(pedalAngle270Rad) * crankLength,
   }
-  const baseDynamicFootAngleAt270 = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngle270Rad)) / 2
+  const baseDynamicFootAngleAt270 = getRealFootAngle(270)
   const footAngleAt270Rad = toRadians(baseDynamicFootAngleAt270)
   const cleatBottomAt270: Point2D = {
     x: pedalAt270.x,
@@ -983,6 +1030,20 @@ export function calculateBikeGeometry(
   if (ankleAngleAt270 > 180) ankleAngleAt270 = 360 - ankleAngleAt270
   ankleAngleAt270 = 180 - ankleAngleAt270
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // ABSTAND TRETLAGER ZU SATTELOBERKANTE
+  // ──────────────────────────────────────────────────────────────────────────
+  const bbToSaddleDx = points.saddleTop.x - points.bb.x
+  const bbToSaddleDy = points.saddleTop.y - points.bb.y
+  const bbToSaddleDistance = Math.sqrt(bbToSaddleDx * bbToSaddleDx + bbToSaddleDy * bbToSaddleDy) / SCALE
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ABSTAND TRETLAGER ZU SEATPOST-TOP
+  // ──────────────────────────────────────────────────────────────────────────
+  const bbToSeatPostDx = points.seatPostTop.x - points.bb.x
+  const bbToSeatPostDy = points.seatPostTop.y - points.bb.y
+  const bbToSeatPostDistance = Math.sqrt(bbToSeatPostDx * bbToSeatPostDx + bbToSeatPostDy * bbToSeatPostDy) / SCALE
+
   return { 
     points, 
     segments, 
@@ -995,7 +1056,9 @@ export function calculateBikeGeometry(
     shoulderAngle,
     elbowAngle,
     ankleAngle,
-    ankleAngleAt270
+    ankleAngleAt270,
+    bbToSaddleDistance,
+    bbToSeatPostDistance
   }
 }
 

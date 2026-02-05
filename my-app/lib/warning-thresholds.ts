@@ -6,7 +6,7 @@
  *
  * Kritisch: < 60° (unrealistische Geometrie)
  */
-export const ANKLE_MIN = 60;
+export const ANKLE_MIN = 50;
 /**
  * Zentrale Definition aller Warnschwellen für biomechanische Messungen.
  * 

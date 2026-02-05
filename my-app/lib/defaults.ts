@@ -55,7 +55,7 @@ export const COCKPIT_CONSTANTS = {
 /** Sattel & Sattelstütze Konstanten (mm). */
 export const SADDLE_CONSTANTS = {
   saddleLength: 255,     // Sattellänge
-  saddleSetback: 50,     // Sattel-Versatz nach hinten
+  saddleSetback: 80,     // Sattel-Versatz nach hinten
 } as const
 
 /** Pedal-Konstanten (mm). */

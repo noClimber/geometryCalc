@@ -25,6 +25,7 @@ import {
   ELBOW_ANGLE_MIN_WARNING,
   ELBOW_ANGLE_MAX_WARNING,
   ELBOW_ANGLE_CRITICAL,
+  ANKLE_MIN,
 } from '@/lib/warning-thresholds'
 import { Card } from '@/components/ui/card'
 import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } from 'react'
@@ -443,11 +444,51 @@ export function BikeVisualization({
         <svg
           ref={svgRef}
           onClick={handleSvgClick}
-          style={{ pointerEvents: measureMode ? 'all' : 'none' }}
-          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ pointerEvents: measureMode ? 'all' : 'auto' }}
+          className="absolute inset-0 w-full h-full"
           viewBox={`${minX} ${minY} ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
         >
+                  {/* Disclaimer & Branding */}
+                  <g
+                    pointerEvents="none"
+                    style={{ userSelect: 'none' }}
+                    fontFamily="'Segoe UI', 'Arial', 'sans-serif'"
+                    fontSize={Math.max(24, width * 0.035)}
+                    textAnchor="start"
+                    fill="#9ca3af"
+                  >
+                    {/* Linksbündig, Abstand 24 nach links, 40 nach unten für beide Zeilen sichtbar */}
+                    {(() => {
+                      const paddingLeft = 24;
+                      const paddingBottom = 40;
+                      const line1Size = Math.max(28, width * 0.045);
+                      const line2Size = Math.max(20, width * 0.032);
+                      const lineSpacing = 8;
+                      const y1 = minY + height - paddingBottom - line2Size - lineSpacing;
+                      const y2 = minY + height - paddingBottom;
+                      return <>
+                        <text
+                          x={minX + paddingLeft}
+                          y={y1}
+                          fontWeight="bold"
+                          fontSize={line1Size}
+                          style={{ letterSpacing: 0.5 }}
+                        >
+                          Bike Geometry Calculator
+                        </text>
+                        <text
+                          x={minX + paddingLeft}
+                          y={y2}
+                          fontWeight="normal"
+                          fontSize={line2Size}
+                          style={{ letterSpacing: 0.2 }}
+                        >
+                          {'\u26A0\uFE0F'} Dient nur zur Visualisierung, kein medizinscher Rat!
+                        </text>
+                      </>;
+                    })()}
+                  </g>
           <g transform={`translate(${pan.x / zoom}, ${pan.y / zoom}) scale(${zoom})`}>
             {geometryA && renderBike(geometryA, '#e74c3c', 0.7, 'A')}
             {geometryB && renderBike(geometryB, '#3498db', 0.7, 'B')}
@@ -750,8 +791,8 @@ export function BikeVisualization({
 
             {/* Knie→Pedal Ampel + Info (nur gelb, am Ende) */}
                         {/* Knie→Pedal Ampel + Info (rot, wenn >= 180°) */}
-                                    {/* Sprunggelenkwinkel Warnung (rot, wenn < 60°) */}
-                                    {riderVisible && geometryA?.ankleAngleAt270 !== undefined && geometryA.ankleAngleAt270 < 60 && (
+                                    {/* Sprunggelenkwinkel Warnung (rot, wenn < ANKLE_MIN) */}
+                                    {riderVisible && geometryA?.ankleAngleAt270 !== undefined && geometryA.ankleAngleAt270 < ANKLE_MIN && (
                                       <div className="flex items-center relative w-full mt-2">
                                         {/* Durchfahrt verboten Icon */}
                                         <span className="w-4 h-4 flex items-center justify-center rounded-full border border-border flex-shrink-0 bg-white" style={{ position: 'relative' }}>
@@ -885,6 +926,22 @@ export function BikeVisualization({
             <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
               <span className="font-medium">Sprunggelenkwinkel: </span>
               <span className="text-primary font-bold">{geometryA.ankleAngle.toFixed(1)}°</span>
+            </div>
+          )}
+          
+          {/* BB to Saddle Distance */}
+          {geometryA?.bbToSaddleDistance !== undefined && (
+            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
+              <span className="font-medium">Tretlager→Sattel: </span>
+              <span className="text-primary font-bold">{geometryA.bbToSaddleDistance.toFixed(1)} mm</span>
+            </div>
+          )}
+          
+          {/* BB to SeatPost Top Distance */}
+          {geometryA?.bbToSeatPostDistance !== undefined && (
+            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
+              <span className="font-medium">Tretlager→SeatPost: </span>
+              <span className="text-primary font-bold">{geometryA.bbToSeatPostDistance.toFixed(1)} mm</span>
             </div>
           )}
           
