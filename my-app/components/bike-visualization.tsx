@@ -40,7 +40,7 @@ export function BikeVisualization({
   bikeB,
   alignmentMode,
 }: BikeVisualizationProps) {
-  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipVisible, setTooltipVisible] = useState<'drop' | 'knee90' | 'knee270' | 'kneePedal' | 'ankle270' | null>(null);
   const [viewState, setViewState] = useState({ zoom: 1, pan: { x: 0, y: 0 } })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -597,7 +597,6 @@ export function BikeVisualization({
               const drop = geometryA.saddleHandlebarDrop;
               const isRed = drop > SADDLE_HANDLEBAR_DROP_CRITICAL;
               const isYellow = !isRed && drop > SADDLE_HANDLEBAR_DROP_WARNING;
-              const isGreen = !isRed && !isYellow;
               let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
               let ampelText = isRed
                 ? (<span><b>Überhöhung: {drop.toFixed(0)}mm</b> – Aggressive Position</span>)
@@ -611,27 +610,250 @@ export function BikeVisualization({
                   : 'Überhöhung im optimalen Bereich: Komfort und Effizienz sind gut ausbalanciert.';
               return (
                 <div className="flex items-center relative w-full pr-2">
-                  {/* Ampel */}
                   <span
                     className="w-4 h-4 rounded-full border border-border flex-shrink-0"
                     style={{ backgroundColor: ampelColor }}
                   />
                   <span className="font-medium text-xs ml-2">{ampelText}</span>
-                  {/* Fragezeichen-Icon immer rechts */}
+                  <span className="flex-1" />
+                  {(isRed || isYellow) && (
+                    <span className="relative flex items-center justify-end">
+                      <span
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                        onMouseEnter={() => setTooltipVisible('drop')}
+                        onMouseLeave={() => setTooltipVisible(null)}
+                        onFocus={() => setTooltipVisible('drop')}
+                        onBlur={() => setTooltipVisible(null)}
+                        tabIndex={0}
+                        aria-label="Mehr Informationen zur Überhöhung"
+                      >
+                        ?
+                      </span>
+                      {tooltipVisible === 'drop' && (
+                        <span
+                          className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          {tooltipText}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Kniewinkel 90° Ampel + Info */}
+            {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
+              const angle = geometryA.kneeAngleAt90;
+              const isRed = angle <= KNEE_90_MIN || angle >= KNEE_90_MAX;
+              const isYellow = !isRed && (angle < KNEE_90_MIN_WARNING || angle > KNEE_90_MAX_WARNING);
+              let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
+              let ampelText = isRed
+                ? (<span><b>Kniewinkel Unten (6 Uhr): {angle.toFixed(1)}°</b> – Außerhalb Norm</span>)
+                : isYellow
+                  ? (<span><b>Kniewinkel Unten (6 Uhr): {angle.toFixed(1)}°</b> – Grenzwertig</span>)
+                  : (<span><b>Kniewinkel Unten (6 Uhr): {angle.toFixed(1)}°</b></span>);
+              let tooltipText = isRed
+                ? 'Kniewinkel bei 90° ist außerhalb des empfohlenen Bereichs. Risiko für Über- oder Unterstreckung.'
+                : isYellow
+                  ? 'Kniewinkel bei 90° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'
+                  : 'Kniewinkel bei 90° im optimalen Bereich.';
+              return (
+                <div className="flex items-center relative w-full pr-2 mt-2">
+                  <span
+                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                    style={{ backgroundColor: ampelColor }}
+                  />
+                  <span className="font-medium text-xs ml-2">{ampelText}</span>
+                  <span className="flex-1" />
+                  {(isRed || isYellow) && (
+                    <span className="relative flex items-center justify-end">
+                      <span
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                        onMouseEnter={() => setTooltipVisible('knee90')}
+                        onMouseLeave={() => setTooltipVisible(null)}
+                        onFocus={() => setTooltipVisible('knee90')}
+                        onBlur={() => setTooltipVisible(null)}
+                        tabIndex={0}
+                        aria-label="Mehr Informationen zum Kniewinkel 90°"
+                      >
+                        ?
+                      </span>
+                      {tooltipVisible === 'knee90' && (
+                        <span
+                          className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          {tooltipText}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Kniewinkel 270° Ampel + Info */}
+            {/* Kniewinkel 270° Ampel + Info */}
+                        {/* Knie→Pedal Ampel + Info */}
+
+            {riderVisible && geometryA?.kneeAngleAt270 !== undefined && (() => {
+              const angle = geometryA.kneeAngleAt270;
+              const isRed = angle <= KNEE_270_MIN;
+              const isYellow = !isRed && angle < KNEE_270_MIN_WARNING;
+              let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
+              let ampelText = isRed
+                ? (<span><b>Kniewinkel Oben (12 Uhr): {angle.toFixed(1)}°</b> – Zu klein</span>)
+                : isYellow
+                  ? (<span><b>Kniewinkel Oben (12 Uhr): {angle.toFixed(1)}°</b> – Grenzwertig</span>)
+                  : (<span><b>Kniewinkel Oben (12 Uhr): {angle.toFixed(1)}°</b></span>);
+              let tooltipText = isRed
+                ? 'Kniewinkel bei Oben° ist zu klein. Risiko für Überstreckung des Knies.'
+                : isYellow
+                  ? 'Kniewinkel bei Oben° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'
+                  : 'Kniewinkel bei Oben° im optimalen Bereich.';
+              return (
+                <div className="flex items-center relative w-full pr-2 mt-2">
+                  <span
+                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                    style={{ backgroundColor: ampelColor }}
+                  />
+                  <span className="font-medium text-xs ml-2">{ampelText}</span>
+                  <span className="flex-1" />
+                  {(isRed || isYellow) && (
+                    <span className="relative flex items-center justify-end">
+                      <span
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                        onMouseEnter={() => setTooltipVisible('knee270')}
+                        onMouseLeave={() => setTooltipVisible(null)}
+                        onFocus={() => setTooltipVisible('knee270')}
+                        onBlur={() => setTooltipVisible(null)}
+                        tabIndex={0}
+                        aria-label="Mehr Informationen zum Kniewinkel 270°"
+                      >
+                        ?
+                      </span>
+                      {tooltipVisible === 'knee270' && (
+                        <span
+                          className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          {tooltipText}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Knie→Pedal Ampel + Info (nur gelb, am Ende) */}
+                        {/* Knie→Pedal Ampel + Info (rot, wenn >= 180°) */}
+                                    {/* Sprunggelenkwinkel Warnung (rot, wenn < 60°) */}
+                                    {riderVisible && geometryA?.ankleAngleAt270 !== undefined && geometryA.ankleAngleAt270 < 60 && (
+                                      <div className="flex items-center relative w-full mt-2">
+                                        {/* Durchfahrt verboten Icon */}
+                                        <span className="w-4 h-4 flex items-center justify-center rounded-full border border-border flex-shrink-0 bg-white" style={{ position: 'relative' }}>
+                                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="8" cy="8" r="7" stroke="#e74c3c" strokeWidth="2" fill="#fff" />
+                                            <rect x="3.5" y="7" width="9" height="2" rx="1" fill="#e74c3c" />
+                                          </svg>
+                                        </span>
+                                        <span className="font-medium text-xs ml-2"><b>unrealistische Radgeometrie</b></span>
+                                        <span className="flex-1" />
+                                        <span className="relative flex items-center justify-end">
+                                          <span
+                                            className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                                            onMouseEnter={() => setTooltipVisible('ankle270')}
+                                            onMouseLeave={() => setTooltipVisible(null)}
+                                            onFocus={() => setTooltipVisible('ankle270')}
+                                            onBlur={() => setTooltipVisible(null)}
+                                            tabIndex={0}
+                                            aria-label="Mehr Informationen zum Sprunggelenkwinkel 270°"
+                                          >
+                                            ?
+                                          </span>
+                                          {tooltipVisible === 'ankle270' && (
+                                            <span
+                                              className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                                              style={{ pointerEvents: 'auto' }}
+                                            >
+                                              Sprunggelenkwinkel bei 270° ist zu klein. Die Geometrie ist biomechanisch nicht realistisch umsetzbar.
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                    )}
+                        {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
+                          const angle = geometryA.kneeAngleAt90;
+                          const isRed = angle >= 180;
+                          if (!isRed) return null;
+                          let ampelText = (<span><b>Sattel zu hoch / Bein zu kurz</b></span>);
+                          let tooltipText = 'Das Bein ist zu kurz (kürzer als für Körpergrösse angegeben). Dadurch ist diese Position nicht realistisch umsetzbar. Der Sattel sollte abgesenkt oder die Beinlänge überprüft werden.';
+                          return (
+                            <div className="flex items-center relative w-full pr-2 mt-2">
+                              {/* Durchfahrt verboten Icon */}
+                              <span className="w-4 h-4 flex items-center justify-center rounded-full border border-border flex-shrink-0 bg-white" style={{ position: 'relative' }}>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <circle cx="8" cy="8" r="7" stroke="#e74c3c" strokeWidth="2" fill="#fff" />
+                                  <rect x="3.5" y="7" width="9" height="2" rx="1" fill="#e74c3c" />
+                                </svg>
+                              </span>
+                              <span className="font-medium text-xs ml-2">{ampelText}</span>
+                              <span className="flex-1" />
+                              <span className="relative flex items-center justify-end">
+                                <span
+                                  className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                                  onMouseEnter={() => setTooltipVisible('kneePedal')}
+                                  onMouseLeave={() => setTooltipVisible(null)}
+                                  onFocus={() => setTooltipVisible('kneePedal')}
+                                  onBlur={() => setTooltipVisible(null)}
+                                  tabIndex={0}
+                                  aria-label="Mehr Informationen zu Kniewinkel 90° (rot)"
+                                >
+                                  ?
+                                </span>
+                                {tooltipVisible === 'kneePedal' && (
+                                  <span
+                                    className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                                    style={{ pointerEvents: 'auto' }}
+                                  >
+                                    {tooltipText}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          );
+                        })()}
+            {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && (() => {
+              const distance = geometryA.kneeTopedalXAt0;
+              const isYellow = distance < KNEE_PEDAL_X_MIN_WARNING;
+              if (!isYellow) return null;
+              let ampelColor = '#f39c12';
+              let ampelText = (<span><b>Knie lotet vor Pedalachse: {distance.toFixed(0)}mm</b> – Grenzwertig</span>);
+              let tooltipText = 'Knie zu Pedal Abstand ist grenzwertig gering. Risiko für ungünstige Kraftübertragung.';
+              return (
+                <div className="flex items-center relative w-full pr-2 mt-2">
+                  <span
+                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                    style={{ backgroundColor: ampelColor }}
+                  />
+                  <span className="font-medium text-xs ml-2">{ampelText}</span>
                   <span className="flex-1" />
                   <span className="relative flex items-center justify-end">
                     <span
                       className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
-                      onMouseEnter={() => setTooltipVisible(true)}
-                      onMouseLeave={() => setTooltipVisible(false)}
-                      onFocus={() => setTooltipVisible(true)}
-                      onBlur={() => setTooltipVisible(false)}
+                      onMouseEnter={() => setTooltipVisible('kneePedal')}
+                      onMouseLeave={() => setTooltipVisible(null)}
+                      onFocus={() => setTooltipVisible('kneePedal')}
+                      onBlur={() => setTooltipVisible(null)}
                       tabIndex={0}
-                      aria-label="Mehr Informationen zur Überhöhung"
+                      aria-label="Mehr Informationen zu Knie→Pedal"
                     >
                       ?
                     </span>
-                    {(isRed || isYellow) && tooltipVisible && (
+                    {tooltipVisible === 'kneePedal' && (
                       <span
                         className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
                         style={{ pointerEvents: 'auto' }}
@@ -657,6 +879,14 @@ export function BikeVisualization({
                 <span className="text-primary font-bold">{geometryA.kneeAngle.toFixed(1)}°</span>
               </div>
             )}
+          
+          {/* Ankle Angle Display */}
+          {riderVisible && geometryA?.ankleAngle !== undefined && (
+            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
+              <span className="font-medium">Sprunggelenkwinkel: </span>
+              <span className="text-primary font-bold">{geometryA.ankleAngle.toFixed(1)}°</span>
+            </div>
+          )}
           
           {/* Knee Angle at 90° */}
           {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {

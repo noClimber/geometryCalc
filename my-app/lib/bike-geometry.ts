@@ -27,6 +27,8 @@ export type BikeGeometryResult = {
   kneeTopedalXAt0?: number // X-Abstand Knie zu Pedal bei 0° Pedalstellung in mm
   shoulderAngle?: number // Schulterwinkel: Hüftgelenk→Schulter→Ellbogen in Grad
   elbowAngle?: number // Ellbogenwinkel: Schulter→Ellbogen→Hand in Grad
+  ankleAngle?: number // Sprunggelenkwinkel: cleatBottom→footContact und footContact→kneeNew in Grad
+  ankleAngleAt270?: number // Sprunggelenkwinkel bei 270°
 }
 
 /** Punkt-IDs, die als Räder gezeichnet werden (Kreise). */
@@ -904,6 +906,83 @@ export function calculateBikeGeometry(
   let elbowAngle = Math.abs((angleToHand - angleToShoulder) * 180 / Math.PI)
   if (elbowAngle > 180) elbowAngle = 360 - elbowAngle
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // SPRUNGGELENKWINKEL: Winkel zwischen cleatBottom→footContact und footContact→kneeNew
+  // ──────────────────────────────────────────────────────────────────────────
+  const cleatToFoot = {
+    x: footPos.x - points.cleatBottom.x,
+    y: footPos.y - points.cleatBottom.y,
+  }
+  const footToKnee = {
+    x: kneeNewPos.x - footPos.x,
+    y: kneeNewPos.y - footPos.y,
+  }
+  const angleCleatToFoot = Math.atan2(cleatToFoot.y, cleatToFoot.x)
+  const angleFootToKnee = Math.atan2(footToKnee.y, footToKnee.x)
+  let ankleAngle = Math.abs((angleFootToKnee - angleCleatToFoot) * 180 / Math.PI)
+  if (ankleAngle > 180) ankleAngle = 360 - ankleAngle
+  ankleAngle = 180 - ankleAngle
+
+  // Sprunggelenkwinkel bei 270°
+  // Berechne Fuß- und Knieposition für Pedalwinkel 270°
+  const pedalAngle270Rad = toRadians(270)
+  const pedalAt270: Point2D = {
+    x: points.bb.x + Math.cos(pedalAngle270Rad) * crankLength,
+    y: points.bb.y + Math.sin(pedalAngle270Rad) * crankLength,
+  }
+  const baseDynamicFootAngleAt270 = FOOT_ANGLE_DEFAULT * (1 + Math.sin(pedalAngle270Rad)) / 2
+  const footAngleAt270Rad = toRadians(baseDynamicFootAngleAt270)
+  const cleatBottomAt270: Point2D = {
+    x: pedalAt270.x,
+    y: pedalAt270.y - cleatDrop,
+  }
+  const footPosAt270: Point2D = {
+    x: cleatBottomAt270.x - cleatSetback * Math.cos(footAngleAt270Rad),
+    y: cleatBottomAt270.y - cleatSetback * Math.sin(footAngleAt270Rad),
+  }
+  // Knie bei 270°
+  const dxHipFootAt270 = hipJointPos.x - footPosAt270.x
+  const dyHipFootAt270 = hipJointPos.y - footPosAt270.y
+  const distHipToFootAt270 = Math.sqrt(dxHipFootAt270 * dxHipFootAt270 + dyHipFootAt270 * dyHipFootAt270)
+  let kneePosAt270: Point2D
+  if (distHipToFootAt270 > newTotalLegLength) {
+    const ratio = newLowerLegLength / newTotalLegLength
+    kneePosAt270 = {
+      x: footPosAt270.x + dxHipFootAt270 * ratio,
+      y: footPosAt270.y + dyHipFootAt270 * ratio,
+    }
+  } else if (distHipToFootAt270 < Math.abs(newLowerLegLength - newUpperLegLength)) {
+    kneePosAt270 = {
+      x: (footPosAt270.x + hipJointPos.x) / 2,
+      y: (footPosAt270.y + hipJointPos.y) / 2,
+    }
+  } else {
+    const a = distHipToFootAt270
+    const b = newLowerLegLength
+    const c = newUpperLegLength
+    const cosAlphaAt270 = (a * a + b * b - c * c) / (2 * a * b)
+    const alphaAt270 = Math.acos(Math.max(-1, Math.min(1, cosAlphaAt270)))
+    const baseAngleAt270 = Math.atan2(dyHipFootAt270, dxHipFootAt270)
+    kneePosAt270 = {
+      x: footPosAt270.x + b * Math.cos(baseAngleAt270 + alphaAt270),
+      y: footPosAt270.y + b * Math.sin(baseAngleAt270 + alphaAt270),
+    }
+  }
+  // Sprunggelenkwinkel bei 270°
+  const cleatToFoot270 = {
+    x: footPosAt270.x - cleatBottomAt270.x,
+    y: footPosAt270.y - cleatBottomAt270.y,
+  }
+  const footToKnee270 = {
+    x: kneePosAt270.x - footPosAt270.x,
+    y: kneePosAt270.y - footPosAt270.y,
+  }
+  const angleCleatToFoot270 = Math.atan2(cleatToFoot270.y, cleatToFoot270.x)
+  const angleFootToKnee270 = Math.atan2(footToKnee270.y, footToKnee270.x)
+  let ankleAngleAt270 = Math.abs((angleFootToKnee270 - angleCleatToFoot270) * 180 / Math.PI)
+  if (ankleAngleAt270 > 180) ankleAngleAt270 = 360 - ankleAngleAt270
+  ankleAngleAt270 = 180 - ankleAngleAt270
+
   return { 
     points, 
     segments, 
@@ -914,7 +993,9 @@ export function calculateBikeGeometry(
     saddleHandlebarDrop,
     kneeTopedalXAt0,
     shoulderAngle,
-    elbowAngle
+    elbowAngle,
+    ankleAngle,
+    ankleAngleAt270
   }
 }
 

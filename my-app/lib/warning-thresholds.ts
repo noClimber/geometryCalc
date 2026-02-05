@@ -1,3 +1,12 @@
+// ════════════════════════════════════════════════════════════════════════════
+// SPRUNGGELENKWINKEL
+// ════════════════════════════════════════════════════════════════════════════
+/**
+ * Sprunggelenkwinkel (cleatBottom→footContact und footContact→kneeNew)
+ *
+ * Kritisch: < 60° (unrealistische Geometrie)
+ */
+export const ANKLE_MIN = 60;
 /**
  * Zentrale Definition aller Warnschwellen für biomechanische Messungen.
  * 
