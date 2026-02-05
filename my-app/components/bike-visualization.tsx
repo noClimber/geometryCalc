@@ -50,9 +50,33 @@ export function BikeVisualization({
   const [riderVisible, setRiderVisible] = useState(true)
   const [measurementsExpanded, setMeasurementsExpanded] = useState(true)
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
+  const [blueprintMode, setBlueprintMode] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null)
 
   const { zoom, pan } = viewState
+
+  // Blueprint-Farbpalette
+  const colors = blueprintMode
+    ? {
+        background: '#0f172a',
+        frame: '#22d3ee',
+        fork: '#22d3ee',
+        wheels: '#94a3b8',
+        rider: '#39FF14', // Neon-Grün
+        grid: 'rgba(255,255,255,0.15)',
+        measure: 'rgba(255,255,255,0.3)',
+        text: '#e0e7ef',
+      }
+    : {
+        background: '#fff',
+        frame: '#e74c3c',
+        fork: '#e74c3c',
+        wheels: '#222',
+        rider: '#22c55e',
+        grid: 'rgba(0,0,0,0.08)',
+        measure: '#f39c12',
+        text: '#222',
+      };
 
   /** Zoom zum Mauszeiger: Der Punkt unter dem Cursor bleibt beim Zoomen fixiert. */
   const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
@@ -253,33 +277,37 @@ export function BikeVisualization({
 
   const renderBike = (
     result: BikeGeometryResult,
-    color: string,
+    frameColor: string,
+    riderColor: string,
+    wheelColor: string,
     opacity: number,
     bikeId: 'A' | 'B'
   ) => {
-    const { points, segments, riderSegments } = result
-
+    const { points, segments, riderSegments } = result;
     const handlePointClick = (id: string) => {
-      if (!measureMode) return
+      if (!measureMode) return;
       setMeasurePoints((prev) => {
-        const existing = prev.find((p) => p.id === id && p.bike === bikeId)
+        const existing = prev.find((p) => p.id === id && p.bike === bikeId);
         if (existing) {
-          return prev.filter((p) => !(p.id === id && p.bike === bikeId))
+          return prev.filter((p) => !(p.id === id && p.bike === bikeId));
         }
         if (prev.length >= 2) {
-          return [{id, bike: bikeId}]
+          return [{ id, bike: bikeId }];
         }
-        return [...prev, {id, bike: bikeId}]
-      })
-    }
-
+        return [...prev, { id, bike: bikeId }];
+      });
+    };
+    // Blueprint: Farben und Stärken
+    const frameStroke = blueprintMode ? 6 : 2.5;
+    const riderStroke = blueprintMode ? 4 : 3;
+    const wheelStroke = blueprintMode ? 2.5 : 2;
     return (
       <g>
-        {/* Linien aus Segmenten (Rahmen, Cockpit, später Fahrer/Hinterbau) */}
+        {/* Rahmen */}
         {segments.map(({ from, to }) => {
-          const a = points[from]
-          const b = points[to]
-          if (!a || !b) return null
+          const a = points[from];
+          const b = points[to];
+          if (!a || !b) return null;
           return (
             <line
               key={`${from}-${to}`}
@@ -287,18 +315,19 @@ export function BikeVisualization({
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke={color}
-              strokeWidth="2"
+              stroke={frameColor}
+              strokeWidth={frameStroke}
               opacity={opacity}
+              strokeLinecap={"round"}
+              strokeLinejoin={"round"}
             />
-          )
+          );
         })}
-
-        {/* Fahrer-Beine (grün) */}
+        {/* Fahrer */}
         {riderVisible && riderSegments?.map(({ from, to }) => {
-          const a = points[from]
-          const b = points[to]
-          if (!a || !b) return null
+          const a = points[from];
+          const b = points[to];
+          if (!a || !b) return null;
           return (
             <line
               key={`rider-${from}-${to}`}
@@ -306,19 +335,19 @@ export function BikeVisualization({
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke="#22c55e"
-              strokeWidth="3"
+              stroke={riderColor}
+              strokeWidth={riderStroke}
               opacity={opacity}
+              strokeLinecap={blueprintMode ? 'round' : undefined}
+              strokeLinejoin={blueprintMode ? 'round' : undefined}
             />
-          )
+          );
         })}
-
         {/* Fahrer-Kopf (Ellipse) */}
         {riderVisible && points.headCenter && points.neckTop && (() => {
-          const headHeight = 1800 * 0.12 * SCALE
-          const headWidth = headHeight * 0.7
-          // Berechne Rotationswinkel aus Hals-Richtung (60° Standard)
-          const neckAngleDeg = 60
+          const headHeight = 1800 * 0.12 * SCALE;
+          const headWidth = headHeight * 0.7;
+          const neckAngleDeg = 60;
           return (
             <ellipse
               cx={points.headCenter.x}
@@ -326,28 +355,32 @@ export function BikeVisualization({
               rx={headWidth / 2}
               ry={headHeight / 2}
               fill="none"
-              stroke="#22c55e"
-              strokeWidth="3"
+              stroke={riderColor}
+              strokeWidth={riderStroke}
               opacity={opacity}
               transform={`rotate(${neckAngleDeg + 90}, ${points.headCenter.x}, ${points.headCenter.y})`}
+              strokeLinecap={blueprintMode ? 'round' : undefined}
+              strokeLinejoin={blueprintMode ? 'round' : undefined}
             />
-          )
+          );
         })()}
-
-        {/* Räder: Außendurchmesser 690mm, Felgendurchmesser 622mm (skaliert) */}
+        {/* Räder + Speichen */}
         {WHEEL_POINT_IDS.map((id) => {
-          const p = points[id]
-          if (!p) return null
-          const outerRadius = (690 / 2) * SCALE // mm -> SVG units
-          const rimRadius = (622 / 2) * SCALE // mm -> SVG units
+          const p = points[id];
+          if (!p) return null;
+          const outerRadius = (690 / 2) * SCALE;
+          const rimRadius = (622 / 2) * SCALE;
+          // Speichen-Anzahl: vorne 8, hinten 12
+          const isFront = id.toLowerCase().includes('front');
+          const spokeCount = blueprintMode ? (isFront ? 8 : 12) : 0;
           return (
             <g key={id}>
               <circle
                 cx={p.x}
                 cy={p.y}
                 r={outerRadius}
-                stroke={color}
-                strokeWidth="2"
+                stroke={wheelColor}
+                strokeWidth={wheelStroke}
                 fill="none"
                 opacity={opacity}
               />
@@ -355,49 +388,68 @@ export function BikeVisualization({
                 cx={p.x}
                 cy={p.y}
                 r={rimRadius}
-                stroke={color}
-                strokeWidth="1"
+                stroke={wheelColor}
+                strokeWidth={blueprintMode ? 1.5 : 1}
                 fill="none"
                 opacity={Math.max(0.2, opacity - 0.1)}
               />
+              {/* Speichen (nur im Blueprint-Mode, bis zum Felgenkreis) */}
+              {blueprintMode && Array.from({ length: spokeCount }).map((_, idx) => {
+                const angle = (2 * Math.PI * idx) / spokeCount;
+                const x2 = p.x + Math.cos(angle) * rimRadius;
+                const y2 = p.y + Math.sin(angle) * rimRadius;
+                return (
+                  <line
+                    key={`spoke-${id}-${idx}`}
+                    x1={p.x}
+                    y1={p.y}
+                    x2={x2}
+                    y2={y2}
+                    stroke={wheelColor}
+                    strokeWidth={1}
+                    opacity={0.7}
+                  />
+                );
+              })}
             </g>
-          )
+          );
         })}
-
         {/* Key-Points (kleine Kreise) */}
         {KEY_POINT_IDS.map((id) => {
-          const p = points[id]
-          if (!p) return null
-          
-          // Fahrer-Punkte: knee, footContact, cleatTop, cleatBottom, hip, shoulder, neckTop, headCenter, elbow
-          const isRiderPoint = ['knee', 'footContact', 'cleatTop', 'cleatBottom', 'hip', 'shoulder', 'neckTop', 'headCenter', 'elbow'].includes(id)
-          if (isRiderPoint && !riderVisible) return null
-          
-          const isSelected = measurePoints.some((mp) => mp.id === id && mp.bike === bikeId)
-          const pointColor = isRiderPoint ? '#22c55e' : color
-          
+          const p = points[id];
+          if (!p) return null;
+          const isRiderPoint = ['knee', 'footContact', 'cleatTop', 'cleatBottom', 'hip', 'shoulder', 'neckTop', 'headCenter', 'elbow'].includes(id);
+          if (isRiderPoint && !riderVisible) return null;
+          const isSelected = measurePoints.some((mp) => mp.id === id && mp.bike === bikeId);
+          const pointColor = isRiderPoint ? riderColor : frameColor;
           return (
             <circle
               key={id}
               cx={p.x}
               cy={p.y}
               r={isSelected ? "6" : "4"}
-              fill={isSelected ? "#f39c12" : pointColor}
+              fill={isSelected ? colors.measure : pointColor}
               opacity={opacity}
               style={{ cursor: measureMode ? 'pointer' : 'default', pointerEvents: measureMode ? 'all' : 'none' }}
               onClick={(e) => {
-                e.stopPropagation()
-                handlePointClick(id)
+                e.stopPropagation();
+                handlePointClick(id);
               }}
             />
-          )
+          );
         })}
       </g>
-    )
-  }
+    );
+  };
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      <button
+        className="mb-2 self-end px-3 py-1 rounded bg-slate-800 text-slate-100 text-xs hover:bg-slate-700 transition"
+        onClick={() => setBlueprintMode((b) => !b)}
+      >
+        {blueprintMode ? 'Standard Mode' : 'Blueprint Mode'}
+      </button>
       {/* SVG Area */}
       <Card 
         className="bg-card p-6 overflow-hidden transition-all duration-300 ease-in-out"
@@ -420,7 +472,7 @@ export function BikeVisualization({
         {/* Grid background */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ opacity: 0.1 }}
+          style={{ opacity: blueprintMode ? 1 : 0.1 }}
         >
           <defs>
             <pattern
@@ -432,8 +484,8 @@ export function BikeVisualization({
               <path
                 d="M 20 0 L 0 0 0 20"
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="0.5"
+                stroke={colors.grid}
+                strokeWidth={blueprintMode ? 0.5 : 0.5}
               />
             </pattern>
           </defs>
@@ -444,54 +496,76 @@ export function BikeVisualization({
         <svg
           ref={svgRef}
           onClick={handleSvgClick}
-          style={{ pointerEvents: measureMode ? 'all' : 'auto' }}
+          style={{ pointerEvents: measureMode ? 'all' : 'auto', background: colors.background }}
           className="absolute inset-0 w-full h-full"
           viewBox={`${minX} ${minY} ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
         >
-                  {/* Disclaimer & Branding */}
-                  <g
-                    pointerEvents="none"
-                    style={{ userSelect: 'none' }}
-                    fontFamily="'Segoe UI', 'Arial', 'sans-serif'"
-                    fontSize={Math.max(24, width * 0.035)}
-                    textAnchor="start"
-                    fill="#9ca3af"
-                  >
-                    {/* Linksbündig, Abstand 24 nach links, 40 nach unten für beide Zeilen sichtbar */}
-                    {(() => {
-                      const paddingLeft = 24;
-                      const paddingBottom = 40;
-                      const line1Size = Math.max(28, width * 0.045);
-                      const line2Size = Math.max(20, width * 0.032);
-                      const lineSpacing = 8;
-                      const y1 = minY + height - paddingBottom - line2Size - lineSpacing;
-                      const y2 = minY + height - paddingBottom;
-                      return <>
-                        <text
-                          x={minX + paddingLeft}
-                          y={y1}
-                          fontWeight="bold"
-                          fontSize={line1Size}
-                          style={{ letterSpacing: 0.5 }}
-                        >
-                          Bike Geometry Calculator
-                        </text>
-                        <text
-                          x={minX + paddingLeft}
-                          y={y2}
-                          fontWeight="normal"
-                          fontSize={line2Size}
-                          style={{ letterSpacing: 0.2 }}
-                        >
-                          {'\u26A0\uFE0F'} Dient nur zur Visualisierung, kein medizinscher Rat!
-                        </text>
-                      </>;
-                    })()}
-                  </g>
+          {/* Hintergrund für Blueprint */}
+          {blueprintMode && (
+            <rect
+              x={minX}
+              y={minY}
+              width={width}
+              height={height}
+              fill={colors.background}
+            />
+          )}
+          {/* Disclaimer & Branding */}
+          <g
+            pointerEvents="none"
+            style={{ userSelect: 'none' }}
+            fontFamily="'Segoe UI', 'Arial', 'sans-serif'"
+            fontSize={Math.max(24, width * 0.035)}
+            textAnchor="start"
+            fill={colors.text}
+          >
+            {/* Linksbündig, Abstand 24 nach links, 40 nach unten für beide Zeilen sichtbar */}
+            {(() => {
+              const paddingLeft = 24;
+              const paddingBottom = 40;
+              const line1Size = Math.max(28, width * 0.045);
+              const line2Size = Math.max(20, width * 0.032);
+              const lineSpacing = 8;
+              const y1 = minY + height - paddingBottom - line2Size - lineSpacing;
+              const y2 = minY + height - paddingBottom;
+              return <>
+                <text
+                  x={minX + paddingLeft}
+                  y={y1}
+                  fontWeight="bold"
+                  fontSize={line1Size}
+                  style={{ letterSpacing: 0.5 }}
+                >
+                  Bike Geometry Calculator
+                </text>
+                <text
+                  x={minX + paddingLeft}
+                  y={y2}
+                  fontWeight="normal"
+                  fontSize={line2Size}
+                  style={{ letterSpacing: 0.2 }}
+                >
+                  {'\u26A0\uFE0F'} Dient nur zur Visualisierung, kein medizinscher Rat!
+                </text>
+              </>;
+            })()}
+          </g>
           <g transform={`translate(${pan.x / zoom}, ${pan.y / zoom}) scale(${zoom})`}>
-            {geometryA && renderBike(geometryA, '#e74c3c', 0.7, 'A')}
-            {geometryB && renderBike(geometryB, '#3498db', 0.7, 'B')}
+            {geometryA && renderBike(
+              geometryA,
+              colors.frame,
+              colors.rider,
+              colors.wheels,
+              0.7,
+              'A')}
+            {geometryB && renderBike(
+              geometryB,
+              colors.frame,
+              colors.rider,
+              colors.wheels,
+              0.7,
+              'B')}
             
             {/* Messlinie */}
             {measureLine && (
