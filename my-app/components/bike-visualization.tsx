@@ -40,6 +40,7 @@ export function BikeVisualization({
   bikeB,
   alignmentMode,
 }: BikeVisualizationProps) {
+  const [tooltipVisible, setTooltipVisible] = useState(false);
   const [viewState, setViewState] = useState({ zoom: 1, pan: { x: 0, y: 0 } })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -589,15 +590,65 @@ export function BikeVisualization({
         }}
       >
         <Card className="p-4 overflow-y-auto max-h-96">
-          <h3 className="text-sm font-semibold mb-2">Hinweise</h3>
+          <h3 className="text-sm font-semibold mb-2">Biomechanik Check</h3>
           <div className="text-xs text-muted-foreground">
-            {/* Placeholder - wird später gefüllt */}
+            {/* Überhöhung Ampel + Info */}
+            {geometryA?.saddleHandlebarDrop !== undefined && (() => {
+              const drop = geometryA.saddleHandlebarDrop;
+              const isRed = drop > SADDLE_HANDLEBAR_DROP_CRITICAL;
+              const isYellow = !isRed && drop > SADDLE_HANDLEBAR_DROP_WARNING;
+              const isGreen = !isRed && !isYellow;
+              let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
+              let ampelText = isRed
+                ? (<span><b>Überhöhung: {drop.toFixed(0)}mm</b> – Aggressive Position</span>)
+                : isYellow
+                  ? (<span><b>Überhöhung: {drop.toFixed(0)}mm</b> – Sportliche Position</span>)
+                  : (<span><b>Überhöhung: {drop.toFixed(0)}mm</b></span>);
+              let tooltipText = isRed
+                ? 'Sehr große Überhöhung: Aggressive Sitzposition, Nackenprobleme und Komforteinbußen möglich.'
+                : isYellow
+                  ? 'Erhöhte Überhöhung: Sportliche Sitzposition, Komfort leicht reduziert.'
+                  : 'Überhöhung im optimalen Bereich: Komfort und Effizienz sind gut ausbalanciert.';
+              return (
+                <div className="flex items-center relative w-full pr-2">
+                  {/* Ampel */}
+                  <span
+                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                    style={{ backgroundColor: ampelColor }}
+                  />
+                  <span className="font-medium text-xs ml-2">{ampelText}</span>
+                  {/* Fragezeichen-Icon immer rechts */}
+                  <span className="flex-1" />
+                  <span className="relative flex items-center justify-end">
+                    <span
+                      className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                      onMouseEnter={() => setTooltipVisible(true)}
+                      onMouseLeave={() => setTooltipVisible(false)}
+                      onFocus={() => setTooltipVisible(true)}
+                      onBlur={() => setTooltipVisible(false)}
+                      tabIndex={0}
+                      aria-label="Mehr Informationen zur Überhöhung"
+                    >
+                      ?
+                    </span>
+                    {(isRed || isYellow) && tooltipVisible && (
+                      <span
+                        className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                        style={{ pointerEvents: 'auto' }}
+                      >
+                        {tooltipText}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </Card>
 
         {/* Right: Measurements */}
         <Card className="p-4 overflow-y-auto max-h-96">
-          <h3 className="text-sm font-semibold mb-2">Messungen</h3>
+          <h3 className="text-sm font-semibold mb-2">Bike Setup</h3>
           <div className="space-y-1.5">
             {/* Knee Angle Display */}
             {riderVisible && geometryA?.kneeAngle !== undefined && (
