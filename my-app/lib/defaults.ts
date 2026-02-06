@@ -8,7 +8,7 @@ export const DEFAULT_BIKE_SELECTION = {
 } as const
 
 /** Min/Max-Grenzwerte pro Cockpit-Feld (mm bzw. Grad). */
-export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>, { min: number; max: number; step?: number }> = {
+export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'> | 'saddleLength' | 'saddleSetback', { min: number; max: number; step?: number }> = {
   spacerHeight:   { min: 0,   max: 5000,  step: 5 },  // Spacerhöhe (mm)
   headsetCap:     { min: 0,   max: 15,  step: 1 },  // Steuersatzabdeckung (mm)
   stemLength:     { min: 40,  max: 1500, step: 5 }, // Vorbaulänge (mm)
@@ -18,10 +18,13 @@ export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>,
   crankLength:    { min: 165, max: 175, step: 2.5 }, // Kurbellänge (mm)
   pedalAngle:     { min: 0,   max: 360, step: 2 },  // Pedalwinkel (Grad)
   seatPostLength: { min: 100, max: 400, step: 5 },  // Sattelstütze (mm)
+  saddleLength:   { min: 200, max: 300, step: 5 },  // Sattellänge (mm)
+  saddleSetback:  { min: -50, max: 50,  step: 1 },  // Sattel-Setback (mm)
+  sitboneOffset: { min: -100, max: 100, step: 5 }, // Sitzbeinhöhe-Offset (mm)
 }
 
 /** Default-Werte für das Cockpit-Setup. */
-export const DEFAULT_COCKPIT: CockpitSetup = {
+export const DEFAULT_COCKPIT: CockpitSetup & { saddleLength?: number; saddleSetback?: number } = {
   spacerHeight: 30,       // 30mm Spacer
   headsetCap: 5,          // 5mm Steuersatzabdeckung
   stemLength: 80,        // 80mm Vorbau
@@ -31,7 +34,10 @@ export const DEFAULT_COCKPIT: CockpitSetup = {
   crankLength: 165,       // 165mm Kurbellänge
   pedalAngle: 0,         // 0° Pedalwinkel
   handPosition: 'hoods',  // Standard: Hoods
-  seatPostLength: 210,    // 240mm Sattelstütze
+  seatPostLength: 210,    // 210mm Sattelstütze
+  saddleLength: 255,      // 255mm Sattellänge (Default)
+  saddleSetback: 80,      // 80mm Sattel-Setback (Default)
+  sitboneOffset: -20,     // Sitzbeinhöhe-Offset (Default)
 }
 
 /** Default-Werte für die Fahrerdaten. */
@@ -66,8 +72,9 @@ export const PEDAL_CONSTANTS = {
 /**
  * Begrenzt einen Cockpit-Wert auf die erlaubte Min/Max-Spanne.
  */
+
 export function clampCockpitValue(
-  field: Exclude<keyof CockpitSetup, 'handPosition'>,
+  field: Exclude<keyof CockpitSetup, 'handPosition'> | 'saddleLength' | 'saddleSetback',
   value: number
 ): number {
   const { min, max } = COCKPIT_LIMITS[field]
@@ -77,7 +84,7 @@ export function clampCockpitValue(
 /**
  * Begrenzt ein ganzes Cockpit-Setup auf die erlaubten Grenzwerte.
  */
-export function clampCockpitSetup(cockpit: CockpitSetup): CockpitSetup {
+export function clampCockpitSetup(cockpit: CockpitSetup & { saddleLength?: number; saddleSetback?: number }): CockpitSetup & { saddleLength?: number; saddleSetback?: number } {
   return {
     spacerHeight:   clampCockpitValue('spacerHeight',   cockpit.spacerHeight),
     headsetCap:     clampCockpitValue('headsetCap',     cockpit.headsetCap),
@@ -89,5 +96,8 @@ export function clampCockpitSetup(cockpit: CockpitSetup): CockpitSetup {
     pedalAngle:     clampCockpitValue('pedalAngle',     cockpit.pedalAngle),
     handPosition:   cockpit.handPosition ?? 'hoods',
     seatPostLength: clampCockpitValue('seatPostLength', cockpit.seatPostLength),
+    saddleLength:   clampCockpitValue('saddleLength', cockpit.saddleLength ?? 255),
+    saddleSetback:  clampCockpitValue('saddleSetback', cockpit.saddleSetback ?? 80),
+    sitboneOffset:  clampCockpitValue('sitboneOffset', cockpit.sitboneOffset ?? -20),
   }
 }

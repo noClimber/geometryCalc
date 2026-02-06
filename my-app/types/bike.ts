@@ -22,6 +22,9 @@ export type CockpitSetup = {
   pedalAngle: number
   handPosition: 'hoods' | 'drops'
   seatPostLength: number
+  saddleSetback?: number // mm, optional für Kompatibilität
+  saddleLength?: number // mm, optional für Kompatibilität
+  sitboneOffset?: number // mm, optional für Kompatibilität
 }
 
 export type RiderSetup = {

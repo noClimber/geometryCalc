@@ -568,23 +568,20 @@ const BikeVisualization = ({
 
         {/* Control Buttons */}
         <div
-          className="absolute bg-card/90 backdrop-blur-sm border border-border rounded-lg p-2 space-y-1.5 text-xs"
+          className="absolute bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1 max-w-xs w-[150px] gap-1 flex flex-col items-stretch z-10 text-xs"
           style={{
             top: 8,
-            left: 8,
-            width: '60%',
-            minWidth: 0,
-            maxWidth: 240,
-            zIndex: 10,
+            left: 8
           }}
         >
+          <div className="font-bold text-sm mb-1 text-center">Steuerung</div>
           {/* Measure Mode Toggle */}
           <button
             onClick={() => {
               setMeasureMode(!measureMode)
               setMeasurePoints([])
             }}
-            className={`w-full px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`w-32 px-2 py-1 rounded text-xs font-medium transition-colors ${
               measureMode
                 ? 'bg-[#f39c12] text-white'
                 : 'bg-muted hover:bg-muted/80'
@@ -595,7 +592,7 @@ const BikeVisualization = ({
           {/* Rider Visibility Toggle */}
           <button
             onClick={() => setRiderVisible(!riderVisible)}
-            className={`w-full px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`w-32 px-2 py-1 rounded text-xs font-medium transition-colors ${
               riderVisible
                 ? 'bg-[#22c55e] text-white'
                 : 'bg-muted hover:bg-muted/80'
@@ -606,7 +603,7 @@ const BikeVisualization = ({
           {/* Animation Toggle Button */}
           <button
             onClick={() => setIsPedaling(!isPedaling)}
-            className={`w-full px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`w-32 px-2 py-1 rounded text-xs font-medium transition-colors ${
               isPedaling
                 ? 'bg-[#22c55e] text-white'
                 : 'bg-muted hover:bg-muted/80'
@@ -617,7 +614,7 @@ const BikeVisualization = ({
           {/* Toggle Measurements */}
           <button
             onClick={() => setMeasurementsExpanded(!measurementsExpanded)}
-            className="w-full px-2 py-1 rounded text-xs font-medium transition-colors bg-muted hover:bg-muted/80"
+            className="w-32 px-2 py-1 rounded text-xs font-medium transition-colors bg-muted hover:bg-muted/80"
           >
             {measurementsExpanded ? '▼ Einklappen' : '▲ Messungen'}
           </button>
@@ -654,6 +651,7 @@ const BikeVisualization = ({
         <Card className="p-4 overflow-y-auto max-h-96">
           <h3 className="text-sm font-semibold mb-2">Biomechanik Check</h3>
           <div className="text-xs text-muted-foreground">
+
             {/* Überhöhung Ampel + Info */}
             {geometryA?.saddleHandlebarDrop !== undefined && (() => {
               const drop = geometryA.saddleHandlebarDrop;
@@ -705,52 +703,51 @@ const BikeVisualization = ({
               );
             })()}
 
-            {/* Kniewinkel 90° Ampel + Info */}
-            <div className="flex items-center relative w-full pr-2 mt-2">
-              <span
-                className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                style={{ backgroundColor: geometryA?.kneeAngleAt90 !== undefined && riderVisible
-                  ? (geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
+            {/* Kniewinkel 90° Ampel + Info (nur wenn Fahrer sichtbar) */}
+            {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (
+              <div className="flex items-center relative w-full pr-2 mt-2">
+                <span
+                  className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                  style={{ backgroundColor:
+                    geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
                       ? '#e74c3c'
                       : (geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING
                           ? '#f39c12'
-                          : '#22c55e'))
-                  : '#d1d5db' // grau wenn Fahrer aus
-                }}
-              />
-              <span className="font-medium text-xs ml-2">
-                <b>Kniewinkel Unten (6 Uhr): </b>
-                {riderVisible && geometryA?.kneeAngleAt90 !== undefined
-                  ? `${geometryA.kneeAngleAt90.toFixed(1)}°`
-                  : '–'}
-              </span>
-              <span className="flex-1" />
-              {riderVisible && geometryA?.kneeAngleAt90 !== undefined && ((geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX || geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING)) && (
-                <span className="relative flex items-center justify-end">
-                  <span
-                    className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
-                    onMouseEnter={() => setTooltipVisible('knee90')}
-                    onMouseLeave={() => setTooltipVisible(null)}
-                    onFocus={() => setTooltipVisible('knee90')}
-                    onBlur={() => setTooltipVisible(null)}
-                    tabIndex={0}
-                    aria-label="Mehr Informationen zum Kniewinkel"
-                  >
-                    ?
-                  </span>
-                  {tooltipVisible === 'knee90' && (
-                    <span
-                      className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
-                      style={{ pointerEvents: 'auto' }}
-                    >
-                      {geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
-                        ? 'Kniewinkel bei 90° ist außerhalb des empfohlenen Bereichs. Risiko für Über- oder Unterstreckung.'
-                        : 'Kniewinkel bei 90° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'}
-                    </span>
-                  )}
+                          : '#22c55e')
+                  }}
+                />
+                <span className="font-medium text-xs ml-2">
+                  <b>Kniewinkel Unten (6 Uhr): </b>
+                  {`${geometryA.kneeAngleAt90.toFixed(1)}°`}
                 </span>
-              )}
-            </div>
+                <span className="flex-1" />
+                {(geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX || geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING) && (
+                  <span className="relative flex items-center justify-end">
+                    <span
+                      className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                      onMouseEnter={() => setTooltipVisible('knee90')}
+                      onMouseLeave={() => setTooltipVisible(null)}
+                      onFocus={() => setTooltipVisible('knee90')}
+                      onBlur={() => setTooltipVisible(null)}
+                      tabIndex={0}
+                      aria-label="Mehr Informationen zum Kniewinkel"
+                    >
+                      ?
+                    </span>
+                    {tooltipVisible === 'knee90' && (
+                      <span
+                        className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                        style={{ pointerEvents: 'auto' }}
+                      >
+                        {geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
+                          ? 'Kniewinkel bei 90° ist außerhalb des empfohlenen Bereichs. Risiko für Über- oder Unterstreckung.'
+                          : 'Kniewinkel bei 90° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Kniewinkel 270° Ampel + Info */}
             {/* Kniewinkel 270° Ampel + Info */}

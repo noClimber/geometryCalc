@@ -430,14 +430,16 @@ export function calculateBikeGeometry(
     y: points.seatTubeTop.y - Math.sin(seatTubeAngleRad) * seatPostLength,
   }
 
-  const saddleSetback = SADDLE_CONSTANTS.saddleSetback * SCALE
-  const saddleLength = SADDLE_CONSTANTS.saddleLength * SCALE
-  
+  // Sattel-Setback und -Länge aus Cockpit-Setup verwenden (Fallback auf Konstanten)
+  // Fallback-Logik: 0 ist ein gültiger Wert, daher explizit auf undefined prüfen
+  const saddleSetback = (typeof cockpit.saddleSetback === 'number' ? cockpit.saddleSetback : SADDLE_CONSTANTS.saddleSetback) * SCALE
+  const saddleLength = (typeof cockpit.saddleLength === 'number' ? cockpit.saddleLength : SADDLE_CONSTANTS.saddleLength) * SCALE
+
   points.saddleLenFwd = {
     x: points.seatPostTop.x + saddleLength / 2 - saddleSetback,
     y: points.seatPostTop.y,
   }
-  
+
   points.saddleLenAft = {
     x: points.saddleLenFwd.x - saddleLength,
     y: points.saddleLenFwd.y,
@@ -625,16 +627,22 @@ export function calculateBikeGeometry(
   const neckLength = RIDER_HEIGHT * NECK_RATIO * SCALE
   const torsoLength = (RIDER_HEIGHT - RIDER_INSEAM - headHeight / SCALE - neckLength / SCALE) * SCALE
   
+const sitboneOffset = typeof cockpit.sitboneOffset === 'number' ? cockpit.sitboneOffset : -20;
+const sitPos = {
+  x: seatPos.x + sitboneOffset,
+  y: seatPos.y,
+}
+
   // Hüfte (visuell) = Sattel-Mittelpunkt
-  points.hip = points.saddleTop
+  points.hip = sitPos
   
   // Hüftgelenk (anatomisch korrekt): 9,5% der Innenbeinlänge vom Sattel nach vorne/oben
   // entlang des Oberkörperwinkels (Torso-Vektor)
   const torsoAngle = toRadians(TORSO_ANGLE)
   const hipJointOffset = RIDER_INSEAM * 0.095 * SCALE // 9,5% Offset für anatomisches Hüftgelenk
   points.hipJoint = {
-    x: points.saddleTop.x + hipJointOffset * Math.cos(torsoAngle),
-    y: points.saddleTop.y - hipJointOffset * Math.sin(torsoAngle),
+    x: sitPos.x + hipJointOffset * Math.cos(torsoAngle),
+    y: sitPos.y - hipJointOffset * Math.sin(torsoAngle),
   }
   
   // ──────────────────────────────────────────────────────────────────────────
