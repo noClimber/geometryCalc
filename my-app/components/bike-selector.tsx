@@ -216,7 +216,7 @@ const [geoOpen, setGeoOpen] = useState(false)
                   Geometrie Basis
                   {/* Kleines Badge wie viele Werte da sind */}
                   <span className="bg-muted text-[10px] px-1.5 py-0.5 rounded-full font-normal text-muted-foreground">
-                    12 Werte
+                    Herstellerangaben
                   </span>
                 </h3>
                 {/* Chevron Icon dreht sich */}

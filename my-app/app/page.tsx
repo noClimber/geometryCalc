@@ -15,6 +15,16 @@ BikeData,
   RiderSetup,
   AvailableBikesMap,
 } from '@/types/bike'
+import { Info , Heart } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export type { BikeData, BikeGeometry, CockpitSetup, RiderSetup } from '@/types/bike'
 
@@ -124,10 +134,63 @@ export default function Home() {
       {/* Sidebar - auf Mobile oben, auf Desktop links */}
       <div className="w-full md:w-[380px] h-[50vh] md:h-screen border-b md:border-r md:border-b-0 border-border bg-card overflow-y-auto flex flex-col">
         <div className="p-4 md:p-6 border-b border-border">
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
-            Rennrad-Geometrie
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Vergleichs-Tool</p>
+<div className="mb-0 pb-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
+                  VeloMetric
+                </h1>
+                <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-wider self-start mt-1">
+                  Beta
+                </span>
+              </div>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
+                    <Info className="h-4 w-4" />
+                    <span className="sr-only">Info & Über</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Über das Projekt</DialogTitle>
+                    <DialogDescription>
+                      Ein privates Tool zur Visualisierung von Fahrrad-Setups.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-4 text-sm">
+                    <div className="bg-muted/50 p-3 rounded-md text-muted-foreground text-xs leading-relaxed">
+                      <strong>Hinweis:</strong> Alle Werte sind mathematische Näherungen. Dieser Rechner ersetzt kein professionelles Bike-Fitting. Bei körperlichen Beschwerden bitte einen Experten konsultieren.
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-foreground text-xs uppercase tracking-wide">Dein Feedback hilft!</h4>
+                      <p className="text-muted-foreground text-xs">
+                        Fehlt dein Lieblings-Bike oder hast du einen Bug gefunden?
+                      </p>
+                      <Button asChild className="w-full gap-2 mt-2" variant="outline">
+                        <a href="https://tally.so/r/w7X0Xy" target="_blank" rel="noopener noreferrer">
+                          <Heart className="h-4 w-4 text-red-500 fill-red-500/10" />
+                          Feedback geben
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4 text-[10px] text-muted-foreground flex justify-between">
+                    <span>Version 0.1</span>
+                    <span>Private & Non-Commercial</span>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {/* Hier nur noch EIN erklärender Satz */}
+            <p className="text-xs text-muted-foreground mt-1">
+              Visualisiere Geometrien und vergleiche deine Sitzposition.
+            </p>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
