@@ -32,7 +32,8 @@ const SetupInput = ({
   min,
   max,
   step = 1,
-  suffix
+  suffix,
+  tooltip
 }: {
   id: string
   label: string
@@ -42,11 +43,26 @@ const SetupInput = ({
   max?: number
   step?: number
   suffix?: string
+  tooltip?: string
 }) => (
   <div className="space-y-1.5">
-    <Label htmlFor={id} className="text-xs text-muted-foreground font-medium">
-      {label} {suffix && <span className="text-[10px] opacity-70">({suffix})</span>}
-    </Label>
+    <div className="flex items-center gap-1.5">
+      {tooltip && (
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px] text-xs">
+              <p>{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      <Label htmlFor={id} className="text-xs text-muted-foreground font-medium">
+        {label} {suffix && <span className="text-[10px] opacity-70">({suffix})</span>}
+      </Label>
+    </div>
     <Input
       id={id}
       type="number"
@@ -321,12 +337,12 @@ const [geoOpen, setGeoOpen] = useState(false)
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <SetupInput id={`${bikeName}-stem-len`} label="Vorbaulänge" suffix="mm" value={bike.cockpit.stemLength} onChange={(v) => handleCockpitChange('stemLength', v)} />
-                  <SetupInput id={`${bikeName}-stem-ang`} label="Winkel" suffix="°" value={bike.cockpit.stemAngle} onChange={(v) => handleCockpitChange('stemAngle', v)} />
-                  <SetupInput id={`${bikeName}-spacer`} label="Spacer" suffix="mm" value={bike.cockpit.spacerHeight} onChange={(v) => handleCockpitChange('spacerHeight', v)} />
-                  <SetupInput id={`${bikeName}-topcap`} label="Top Cap" suffix="mm" value={bike.cockpit.headsetCap} onChange={(v) => handleCockpitChange('headsetCap', v)} />
-                  <SetupInput id={`${bikeName}-reach`} label="Lenker Reach" suffix="mm" value={bike.cockpit.handlebarReach} onChange={(v) => handleCockpitChange('handlebarReach', v)} />
-                  <SetupInput id={`${bikeName}-drop`} label="Lenker Drop" suffix="mm" value={bike.cockpit.handlebarDrop} onChange={(v) => handleCockpitChange('handlebarDrop', v)} />
+                  <SetupInput id={`${bikeName}-stem-len`} label="Vorbaulänge" suffix="mm" value={bike.cockpit.stemLength} onChange={(v) => handleCockpitChange('stemLength', v)} tooltip="Die Länge des Vorbaus in Millimetern. Ein längerer Vorbau führt zu einer gestreckteren, aerodynamischeren Sitzposition, während ein kürzerer Vorbau die Haltung aufrechter und wendiger macht." />
+                  <SetupInput id={`${bikeName}-stem-ang`} label="Winkel" suffix="°" value={bike.cockpit.stemAngle} onChange={(v) => handleCockpitChange('stemAngle', v)} tooltip="Der Winkel des Vorbaus relativ zum Steuerrohr. Ein negativer Winkel senkt den Lenker ab (aggressiver), ein positiver hebt ihn an (komfortabler)." />
+                  <SetupInput id={`${bikeName}-spacer`} label="Spacer" suffix="mm" value={bike.cockpit.spacerHeight} onChange={(v) => handleCockpitChange('spacerHeight', v)} tooltip="Die Höhe der Spacer unter dem Vorbau. Mehr Spacer erhöhen die Lenkerhöhe und sorgen für eine aufrechtere Sitzposition." />
+                  <SetupInput id={`${bikeName}-topcap`} label="Top Cap" suffix="mm" value={bike.cockpit.headsetCap} onChange={(v) => handleCockpitChange('headsetCap', v)} tooltip="Die Höhe der Steuersatzkappe ('Top Cap') über dem Vorbau. Beeinflusst die finale Höhe des Cockpits." />
+                  <SetupInput id={`${bikeName}-reach`} label="Lenker Reach" suffix="mm" value={bike.cockpit.handlebarReach} onChange={(v) => handleCockpitChange('handlebarReach', v)} tooltip="Der horizontale Abstand von der Lenkermitte bis zur Vorderseite der Bremsgriffe. Beeinflusst, wie weit du nach vorne greifen musst." />
+                  <SetupInput id={`${bikeName}-drop`} label="Lenker Drop" suffix="mm" value={bike.cockpit.handlebarDrop} onChange={(v) => handleCockpitChange('handlebarDrop', v)} tooltip="Der vertikale Abstand zwischen dem Oberlenker und dem Unterlenker. Ein größerer Drop ermöglicht eine tiefere, aerodynamischere Haltung im Unterlenker." />
                 </div>
               </div>
 
@@ -335,10 +351,10 @@ const [geoOpen, setGeoOpen] = useState(false)
                <div className="space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sitzposition</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <SetupInput id={`${bikeName}-seatpost`} label="Sattelstütze" suffix="Auszug" value={bike.cockpit.seatPostLength} onChange={(v) => handleCockpitChange('seatPostLength', v)} />
-                  <SetupInput id={`${bikeName}-setback`} label="Setback" suffix="mm" value={bike.cockpit.saddleSetback ?? 80} onChange={(v) => handleCockpitChange('saddleSetback', v)} />
-                  <SetupInput id={`${bikeName}-saddle`} label="Sattellänge" suffix="mm" value={bike.cockpit.saddleLength ?? 255} onChange={(v) => handleCockpitChange('saddleLength', v)} />
-                  <SetupInput id={`${bikeName}-offset`} label="Sitzposition" suffix="Offset" value={bike.cockpit.sitboneOffset ?? -20} onChange={(v) => handleCockpitChange('sitboneOffset', v)} />
+                  <SetupInput id={`${bikeName}-seatpost`} label="Sattelstütze" suffix="Auszug" value={bike.cockpit.seatPostLength} onChange={(v) => handleCockpitChange('seatPostLength', v)} tooltip="Die Länge der Sattelstütze, die aus dem Rahmen herausragt. Bestimmt zusammen mit der Sitzrohrlänge die Sattelhöhe." />
+                  <SetupInput id={`${bikeName}-setback`} label="Setback" suffix="mm" value={bike.cockpit.saddleSetback ?? 80} onChange={(v) => handleCockpitChange('saddleSetback', v)} tooltip="Der horizontale Versatz der Sattelklemmung hinter der Mitte der Sattelstütze. Beeinflusst die Position des Sattels relativ zum Tretlager." />
+                  <SetupInput id={`${bikeName}-saddle`} label="Sattellänge" suffix="mm" value={bike.cockpit.saddleLength ?? 255} onChange={(v) => handleCockpitChange('saddleLength', v)} tooltip="Die Gesamtlänge des Sattels. Wichtig für die Berechnung der effektiven Sitzposition." />
+                  <SetupInput id={`${bikeName}-offset`} label="Sitzposition" suffix="Offset" value={bike.cockpit.sitboneOffset ?? -20} onChange={(v) => handleCockpitChange('sitboneOffset', v)} tooltip="Feinjustierung der Sitzposition auf dem Sattel. Ein negativer Wert verschiebt den Sitzknochen-Kontaktpunkt nach vorne, ein positiver nach hinten." />
                 </div>
               </div>
 
@@ -347,8 +363,8 @@ const [geoOpen, setGeoOpen] = useState(false)
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Antrieb</h3>
                 <div className="grid grid-cols-2 gap-3">
-                   <SetupInput id={`${bikeName}-crank`} label="Kurbellänge" suffix="mm" value={bike.cockpit.crankLength} onChange={(v) => handleCockpitChange('crankLength', v)} />
-                   <SetupInput id={`${bikeName}-pedal`} label="Pedalwinkel" suffix="°" value={bike.cockpit.pedalAngle} onChange={(v) => handleCockpitChange('pedalAngle', v)} />
+                   <SetupInput id={`${bikeName}-crank`} label="Kurbellänge" suffix="mm" value={bike.cockpit.crankLength} onChange={(v) => handleCockpitChange('crankLength', v)} tooltip="Die Länge der Kurbelarme. Kürzere Kurbeln können bei Knieproblemen helfen und die Bodenfreiheit in Kurven erhöhen, längere bieten potenziell mehr Hebelkraft." />
+                   <SetupInput id={`${bikeName}-pedal`} label="Pedalwinkel" suffix="°" value={bike.cockpit.pedalAngle} onChange={(v) => handleCockpitChange('pedalAngle', v)} tooltip="Der Winkel der Pedale im tiefsten Punkt. Beeinflusst die Fußstellung und kann für die Simulation der Kniewinkel relevant sein." />
                 </div>
               </div>
 
@@ -357,10 +373,10 @@ const [geoOpen, setGeoOpen] = useState(false)
                <div className="space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Fahrer Körpermaße</h3>
                  <div className="grid grid-cols-2 gap-3">
-                    <SetupInput id={`${bikeName}-height`} label="Körpergröße" suffix="mm" value={bike.rider.riderHeight} onChange={(v) => handleRiderChange('riderHeight', v)} min={1500} max={2200} step={10} />
-                    <SetupInput id={`${bikeName}-inseam`} label="Schrittlänge" suffix="mm" value={bike.rider.riderInseam} onChange={(v) => handleRiderChange('riderInseam', v)} min={700} max={1100} step={10} />
-                    <SetupInput id={`${bikeName}-torso`} label="Rückenwinkel" suffix="°" value={bike.rider.torsoAngle} onChange={(v) => handleRiderChange('torsoAngle', v)} min={0} max={90} />
-                    <SetupInput id={`${bikeName}-shoe`} label="Schuhdicke" suffix="mm" value={bike.rider.shoeThickness} onChange={(v) => handleRiderChange('shoeThickness', v)} min={0} max={50} />
+                    <SetupInput id={`${bikeName}-height`} label="Körpergröße" suffix="mm" value={bike.rider.riderHeight} onChange={(v) => handleRiderChange('riderHeight', v)} min={1500} max={2200} step={10} tooltip="Deine gesamte Körpergröße. Dient als Basis für viele Proportionsberechnungen." />
+                    <SetupInput id={`${bikeName}-inseam`} label="Schrittlänge" suffix="mm" value={bike.rider.riderInseam} onChange={(v) => handleRiderChange('riderInseam', v)} min={700} max={1100} step={10} tooltip="Die Innenbeinlänge, gemessen vom Boden bis zum Schritt. Entscheidend für die Berechnung der korrekten Sattelhöhe." />
+                    <SetupInput id={`${bikeName}-torso`} label="Rückenwinkel" suffix="°" value={bike.rider.torsoAngle} onChange={(v) => handleRiderChange('torsoAngle', v)} min={0} max={90} tooltip="Der gewünschte Winkel deines Oberkörpers relativ zur Horizontalen. Ein kleinerer Winkel bedeutet eine flachere, aerodynamischere Haltung." />
+                    <SetupInput id={`${bikeName}-shoe`} label="Schuhdicke" suffix="mm" value={bike.rider.shoeThickness} onChange={(v) => handleRiderChange('shoeThickness', v)} min={0} max={50} tooltip="Die Dicke der Sohle deiner Radschuhe, inklusive Cleats. Beeinflusst die effektive Beinlänge." />
                  </div>
               </div>
 
