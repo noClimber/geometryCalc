@@ -1,4 +1,4 @@
-import type { BikeData, AlignmentMode } from '@/types/bike'
+import type { BikeData } from '@/types/bike'
 import {
   COCKPIT_CONSTANTS,
   SADDLE_CONSTANTS,
@@ -52,7 +52,7 @@ export const KEY_POINT_IDS = [
   'hipJoint',
   'pedalRight',
   'pedalLeft',
-  'knee',
+  //'knee',
   'kneeNew',
   'footContact',
   'cleatTop',
@@ -293,12 +293,11 @@ function calculateKneeAngleAtPedalAngle(
  * - Y-Achse: unten (positiv, SVG-Standard)
  * 
  * @param bike - Fahrrad-Daten (Geometrie + Cockpit-Setup)
- * @param alignmentMode - Ausrichtungsmodus (aktuell nicht verwendet)
+ 
  * @returns Objekt mit allen berechneten Punkten und Segmenten
  */
 export function calculateBikeGeometry(
-  bike: BikeData,
-  alignmentMode: AlignmentMode
+  bike: BikeData
 ): BikeGeometryResult {
   const { geometry, cockpit, rider } = bike
   const {

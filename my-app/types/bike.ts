@@ -40,7 +40,6 @@ export type BikeData = {
   rider: RiderSetup
 }
 
-export type AlignmentMode = 'bb' | 'rear'
 
 export type AvailableBikesMap = Record<
   string,

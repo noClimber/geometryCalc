@@ -16,7 +16,7 @@ export const COCKPIT_LIMITS: Record<Exclude<keyof CockpitSetup, 'handPosition'>,
   handlebarReach: { min: 50,  max: 100, step: 5 },  // Lenker Reach (mm)
   handlebarDrop:  { min: 100, max: 160, step: 5 }, // Lenker Drop (mm)
   crankLength:    { min: 165, max: 175, step: 2.5 }, // Kurbellänge (mm)
-  pedalAngle:     { min: 0,   max: 360, step: 15 },  // Pedalwinkel (Grad)
+  pedalAngle:     { min: 0,   max: 360, step: 2 },  // Pedalwinkel (Grad)
   seatPostLength: { min: 100, max: 400, step: 5 },  // Sattelstütze (mm)
 }
 

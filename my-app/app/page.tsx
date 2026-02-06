@@ -2,22 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { BikeSelector } from '@/components/bike-selector'
-import { BikeVisualization } from '@/components/bike-visualization'
+import BikeVisualization from '@/components/bike-visualization'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import bikesData from '@/data/bikes.json'
 import { parseBikesData } from '@/lib/bikes-schema'
 import { clampCockpitSetup, DEFAULT_COCKPIT, DEFAULT_RIDER, DEFAULT_BIKE_SELECTION } from '@/lib/defaults'
 import type {
-  BikeData,
+BikeData,
   BikeGeometry,
   CockpitSetup,
   RiderSetup,
-  AlignmentMode,
   AvailableBikesMap,
 } from '@/types/bike'
 
-export type { BikeData, BikeGeometry, CockpitSetup, RiderSetup, AlignmentMode } from '@/types/bike'
+export type { BikeData, BikeGeometry, CockpitSetup, RiderSetup } from '@/types/bike'
 
 /** Laufzeit-validierte Bike-Daten (Zod). Bei ungültiger JSON wird {} verwendet. */
 const AVAILABLE_BIKES = parseBikesData(bikesData)
@@ -83,7 +82,7 @@ export default function Home() {
   })
 
   const [bikeB, setBikeB] = useState<BikeData | null>(null)
-  const [alignmentMode, setAlignmentMode] = useState<AlignmentMode>('bb')
+  // Alignment mode removed
   const [activeTab, setActiveTab] = useState('bikeA')
   const [isPedaling, setIsPedaling] = useState(false)
 
@@ -161,48 +160,14 @@ export default function Home() {
         </Tabs>
       </div>
 
-      {/* Main Area */}
+      {/* Main Area - Header entfernt, SVG-Bereich vergrößert */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-sm font-medium text-foreground">Ausrichtung:</div>
-            <div className="flex gap-2">
-              <Button
-                variant={alignmentMode === 'bb' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAlignmentMode('bb')}
-              >
-                Tretlager
-              </Button>
-              <Button
-                variant={alignmentMode === 'rear' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAlignmentMode('rear')}
-              >
-                Hinterrad
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="text-sm font-medium text-foreground">Animation:</div>
-            <Button
-              variant={isPedaling ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setIsPedaling(!isPedaling)}
-            >
-              {isPedaling ? '⏸ Stopp' : '▶ Pedalieren'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Visualization - auf Mobile unten, auf Desktop rechts */}
-        <div className="flex-1 bg-background p-4 md:p-6 h-[50vh] md:h-screen">
+        <div className="flex-1 bg-background p-4 md:p-6 h-full">
           <BikeVisualization
             bikeA={bikeA}
             bikeB={bikeB}
-            alignmentMode={alignmentMode}
+            isPedaling={isPedaling}
+            setIsPedaling={setIsPedaling}
           />
         </div>
       </div>

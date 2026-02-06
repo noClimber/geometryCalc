@@ -1,6 +1,6 @@
 'use client'
 
-import type { BikeData, AlignmentMode } from '@/types/bike'
+import type { BikeData } from '@/types/bike'
 import {
   calculateBikeGeometry,
   type BikeGeometryResult,
@@ -33,22 +33,24 @@ import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } f
 type BikeVisualizationProps = {
   bikeA: BikeData | null
   bikeB: BikeData | null
-  alignmentMode: AlignmentMode
+  isPedaling: boolean
+  setIsPedaling: (v: boolean) => void
 }
 
-export function BikeVisualization({
+const BikeVisualization = ({
   bikeA,
   bikeB,
-  alignmentMode,
-}: BikeVisualizationProps) {
+  isPedaling,
+  setIsPedaling,
+}: BikeVisualizationProps) => {
   const [tooltipVisible, setTooltipVisible] = useState<'drop' | 'knee90' | 'knee270' | 'kneePedal' | 'ankle270' | null>(null);
-  const [viewState, setViewState] = useState({ zoom: 1, pan: { x: 0, y: 0 } })
+  const [viewState, setViewState] = useState({ zoom: 0.7, pan: { x: 120, y: -170 } })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [measurePoints, setMeasurePoints] = useState<Array<{id: string, bike: 'A' | 'B'}>>([])
   const [measureMode, setMeasureMode] = useState(false)
   const [riderVisible, setRiderVisible] = useState(true)
-  const [measurementsExpanded, setMeasurementsExpanded] = useState(true)
+  const [measurementsExpanded, setMeasurementsExpanded] = useState(false)
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -197,12 +199,13 @@ export function BikeVisualization({
   }
 
   const geometryA: BikeGeometryResult | null = bikeA
-    ? calculateBikeGeometry(bikeA, alignmentMode)
+    ? calculateBikeGeometry(bikeA)
     : null
   const geometryB: BikeGeometryResult | null = bikeB
-    ? calculateBikeGeometry(bikeB, alignmentMode)
+    ? calculateBikeGeometry(bikeB)
     : null
 
+  // Immer alle Punkte für die ViewBox-Berechnung verwenden, unabhängig von riderVisible
   const allPoints = [
     ...(geometryA ? Object.values(geometryA.points) : []),
     ...(geometryB ? Object.values(geometryB.points) : []),
@@ -318,7 +321,7 @@ export function BikeVisualization({
           const headHeight = 1800 * 0.12 * SCALE
           const headWidth = headHeight * 0.7
           // Berechne Rotationswinkel aus Hals-Richtung (60° Standard)
-          const neckAngleDeg = 60
+          const neckAngleDeg = 120
           return (
             <ellipse
               cx={points.headCenter.x}
@@ -370,7 +373,7 @@ export function BikeVisualization({
           if (!p) return null
           
           // Fahrer-Punkte: knee, footContact, cleatTop, cleatBottom, hip, shoulder, neckTop, headCenter, elbow
-          const isRiderPoint = ['knee', 'footContact', 'cleatTop', 'cleatBottom', 'hip', 'shoulder', 'neckTop', 'headCenter', 'elbow'].includes(id)
+          const isRiderPoint = ['kneeNew', 'footContact', 'cleatTop', 'cleatBottom', 'hip', 'hipJoint', 'shoulder', 'neckTop', 'headCenter', 'elbow'].includes(id)
           if (isRiderPoint && !riderVisible) return null
           
           const isSelected = measurePoints.some((mp) => mp.id === id && mp.bike === bikeId)
@@ -455,21 +458,21 @@ export function BikeVisualization({
                     style={{ userSelect: 'none' }}
                     fontFamily="'Segoe UI', 'Arial', 'sans-serif'"
                     fontSize={Math.max(24, width * 0.035)}
-                    textAnchor="start"
+                    textAnchor="middle"
                     fill="#9ca3af"
                   >
                     {/* Linksbündig, Abstand 24 nach links, 40 nach unten für beide Zeilen sichtbar */}
                     {(() => {
-                      const paddingLeft = 24;
                       const paddingBottom = 40;
                       const line1Size = Math.max(28, width * 0.045);
                       const line2Size = Math.max(20, width * 0.032);
                       const lineSpacing = 8;
+                      const centerX = 250;
                       const y1 = minY + height - paddingBottom - line2Size - lineSpacing;
                       const y2 = minY + height - paddingBottom;
                       return <>
                         <text
-                          x={minX + paddingLeft}
+                          x={centerX}
                           y={y1}
                           fontWeight="bold"
                           fontSize={line1Size}
@@ -478,7 +481,7 @@ export function BikeVisualization({
                           Bike Geometry Calculator
                         </text>
                         <text
-                          x={minX + paddingLeft}
+                          x={centerX}
                           y={y2}
                           fontWeight="normal"
                           fontSize={line2Size}
@@ -564,7 +567,17 @@ export function BikeVisualization({
         </svg>
 
         {/* Control Buttons */}
-        <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-2 space-y-1.5 text-xs">
+        <div
+          className="absolute bg-card/90 backdrop-blur-sm border border-border rounded-lg p-2 space-y-1.5 text-xs"
+          style={{
+            top: 8,
+            left: 8,
+            width: '60%',
+            minWidth: 0,
+            maxWidth: 240,
+            zIndex: 10,
+          }}
+        >
           {/* Measure Mode Toggle */}
           <button
             onClick={() => {
@@ -579,7 +592,6 @@ export function BikeVisualization({
           >
             {measureMode ? '📏 Aktiv' : '📏 Messen'}
           </button>
-          
           {/* Rider Visibility Toggle */}
           <button
             onClick={() => setRiderVisible(!riderVisible)}
@@ -589,9 +601,19 @@ export function BikeVisualization({
                 : 'bg-muted hover:bg-muted/80'
             }`}
           >
-            {riderVisible ? '🚴 An' : '🚴 Aus'}
+            {riderVisible ? '🚴 Fahrer An' : '🚴 Fahrer Aus'}
           </button>
-          
+          {/* Animation Toggle Button */}
+          <button
+            onClick={() => setIsPedaling(!isPedaling)}
+            className={`w-full px-2 py-1 rounded text-xs font-medium transition-colors ${
+              isPedaling
+                ? 'bg-[#22c55e] text-white'
+                : 'bg-muted hover:bg-muted/80'
+            }`}
+          >
+            {isPedaling ? 'Animation An' : 'Animation Aus'}
+          </button>
           {/* Toggle Measurements */}
           <button
             onClick={() => setMeasurementsExpanded(!measurementsExpanded)}
@@ -599,7 +621,6 @@ export function BikeVisualization({
           >
             {measurementsExpanded ? '▼ Einklappen' : '▲ Messungen'}
           </button>
-          
           {/* Bike Info */}
           {bikeA && (
             <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
@@ -685,55 +706,51 @@ export function BikeVisualization({
             })()}
 
             {/* Kniewinkel 90° Ampel + Info */}
-            {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
-              const angle = geometryA.kneeAngleAt90;
-              const isRed = angle <= KNEE_90_MIN || angle >= KNEE_90_MAX;
-              const isYellow = !isRed && (angle < KNEE_90_MIN_WARNING || angle > KNEE_90_MAX_WARNING);
-              let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
-              let ampelText = isRed
-                ? (<span><b>Kniewinkel Unten (6 Uhr): {angle.toFixed(1)}°</b> – Außerhalb Norm</span>)
-                : isYellow
-                  ? (<span><b>Kniewinkel Unten (6 Uhr): {angle.toFixed(1)}°</b> – Grenzwertig</span>)
-                  : (<span><b>Kniewinkel Unten (6 Uhr): {angle.toFixed(1)}°</b></span>);
-              let tooltipText = isRed
-                ? 'Kniewinkel bei 90° ist außerhalb des empfohlenen Bereichs. Risiko für Über- oder Unterstreckung.'
-                : isYellow
-                  ? 'Kniewinkel bei 90° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'
-                  : 'Kniewinkel bei 90° im optimalen Bereich.';
-              return (
-                <div className="flex items-center relative w-full pr-2 mt-2">
+            <div className="flex items-center relative w-full pr-2 mt-2">
+              <span
+                className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                style={{ backgroundColor: geometryA?.kneeAngleAt90 !== undefined && riderVisible
+                  ? (geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
+                      ? '#e74c3c'
+                      : (geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING
+                          ? '#f39c12'
+                          : '#22c55e'))
+                  : '#d1d5db' // grau wenn Fahrer aus
+                }}
+              />
+              <span className="font-medium text-xs ml-2">
+                <b>Kniewinkel Unten (6 Uhr): </b>
+                {riderVisible && geometryA?.kneeAngleAt90 !== undefined
+                  ? `${geometryA.kneeAngleAt90.toFixed(1)}°`
+                  : '–'}
+              </span>
+              <span className="flex-1" />
+              {riderVisible && geometryA?.kneeAngleAt90 !== undefined && ((geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX || geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING)) && (
+                <span className="relative flex items-center justify-end">
                   <span
-                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: ampelColor }}
-                  />
-                  <span className="font-medium text-xs ml-2">{ampelText}</span>
-                  <span className="flex-1" />
-                  {(isRed || isYellow) && (
-                    <span className="relative flex items-center justify-end">
-                      <span
-                        className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
-                        onMouseEnter={() => setTooltipVisible('knee90')}
-                        onMouseLeave={() => setTooltipVisible(null)}
-                        onFocus={() => setTooltipVisible('knee90')}
-                        onBlur={() => setTooltipVisible(null)}
-                        tabIndex={0}
-                        aria-label="Mehr Informationen zum Kniewinkel 90°"
-                      >
-                        ?
-                      </span>
-                      {tooltipVisible === 'knee90' && (
-                        <span
-                          className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
-                          style={{ pointerEvents: 'auto' }}
-                        >
-                          {tooltipText}
-                        </span>
-                      )}
+                    className="w-4 h-4 flex items-center justify-center rounded-full bg-muted text-xs font-bold border border-border cursor-pointer"
+                    onMouseEnter={() => setTooltipVisible('knee90')}
+                    onMouseLeave={() => setTooltipVisible(null)}
+                    onFocus={() => setTooltipVisible('knee90')}
+                    onBlur={() => setTooltipVisible(null)}
+                    tabIndex={0}
+                    aria-label="Mehr Informationen zum Kniewinkel"
+                  >
+                    ?
+                  </span>
+                  {tooltipVisible === 'knee90' && (
+                    <span
+                      className="absolute right-6 top-1/2 -translate-y-1/2 z-10 px-2 py-1 rounded bg-background border border-border text-xs text-muted-foreground shadow-lg min-w-[180px] whitespace-normal"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      {geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
+                        ? 'Kniewinkel bei 90° ist außerhalb des empfohlenen Bereichs. Risiko für Über- oder Unterstreckung.'
+                        : 'Kniewinkel bei 90° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'}
                     </span>
                   )}
-                </div>
-              );
-            })()}
+                </span>
+              )}
+            </div>
 
             {/* Kniewinkel 270° Ampel + Info */}
             {/* Kniewinkel 270° Ampel + Info */}
@@ -1015,73 +1032,67 @@ export function BikeVisualization({
           })()}
           
           {/* Knee to Pedal X Distance at 0° */}
-          {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && (() => {
-            const distance = geometryA.kneeTopedalXAt0
-            const isYellow = distance < KNEE_PEDAL_X_MIN_WARNING
-            return (
-              <div 
-                className="px-2 py-1 rounded text-[10px]"
-                style={{
-                  backgroundColor: isYellow 
-                    ? 'hsl(45 93% 47%)'
-                    : 'hsl(var(--muted) / 0.5)',
-                  color: isYellow ? 'white' : 'inherit'
-                }}
-              >
-                <span className="font-medium">Knie→Pedal @ 0°: </span>
-                <span className="font-bold">{distance.toFixed(0)} mm</span>
-              </div>
-            )
-          })()}
+            <div 
+              className="px-2 py-1 rounded text-[10px]"
+              style={{
+                backgroundColor: riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING
+                  ? 'hsl(45 93% 47%)'
+                  : 'hsl(var(--muted) / 0.5)',
+                color: riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING ? 'white' : 'inherit'
+              }}
+            >
+              <span className="font-medium">Knie→Pedal @ 0°: </span>
+              <span className="font-bold">
+                {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined
+                  ? `${geometryA.kneeTopedalXAt0.toFixed(0)} mm`
+                  : '–'}
+              </span>
+            </div>
           
           {/* Shoulder Angle */}
-          {riderVisible && geometryA?.shoulderAngle !== undefined && (() => {
-            const angle = geometryA.shoulderAngle
-            const isRed = angle < SHOULDER_ANGLE_MIN || angle > SHOULDER_ANGLE_MAX
-            const isYellow = !isRed && ((angle >= SHOULDER_ANGLE_MIN && angle < SHOULDER_ANGLE_MIN_WARNING) || (angle > SHOULDER_ANGLE_MAX_WARNING && angle <= SHOULDER_ANGLE_MAX))
-            return (
-              <div 
-                className="px-2 py-1 rounded text-[10px]"
-                style={{
-                  backgroundColor: isRed 
-                    ? 'hsl(0 84% 60%)' 
-                    : isYellow 
-                      ? 'hsl(45 93% 47%)'
-                      : 'hsl(var(--muted) / 0.5)',
-                  color: isRed || isYellow ? 'white' : 'inherit'
-                }}
-              >
-                <span className="font-medium">Schulterwinkel: </span>
-                <span className="font-bold">{angle.toFixed(1)}°</span>
-              </div>
-            )
-          })()}
+            <div 
+              className="px-2 py-1 rounded text-[10px]"
+              style={{
+                backgroundColor: riderVisible && geometryA?.shoulderAngle !== undefined && (geometryA.shoulderAngle < SHOULDER_ANGLE_MIN || geometryA.shoulderAngle > SHOULDER_ANGLE_MAX)
+                  ? 'hsl(0 84% 60%)'
+                  : riderVisible && geometryA?.shoulderAngle !== undefined && ((geometryA.shoulderAngle >= SHOULDER_ANGLE_MIN && geometryA.shoulderAngle < SHOULDER_ANGLE_MIN_WARNING) || (geometryA.shoulderAngle > SHOULDER_ANGLE_MAX_WARNING && geometryA.shoulderAngle <= SHOULDER_ANGLE_MAX))
+                    ? 'hsl(45 93% 47%)'
+                    : 'hsl(var(--muted) / 0.5)',
+                color: riderVisible && geometryA?.shoulderAngle !== undefined && (geometryA.shoulderAngle < SHOULDER_ANGLE_MIN || geometryA.shoulderAngle > SHOULDER_ANGLE_MAX || (geometryA.shoulderAngle >= SHOULDER_ANGLE_MIN && geometryA.shoulderAngle < SHOULDER_ANGLE_MIN_WARNING) || (geometryA.shoulderAngle > SHOULDER_ANGLE_MAX_WARNING && geometryA.shoulderAngle <= SHOULDER_ANGLE_MAX)) ? 'white' : 'inherit'
+              }}
+            >
+              <span className="font-medium">Schulterwinkel: </span>
+              <span className="font-bold">
+                {riderVisible && geometryA?.shoulderAngle !== undefined
+                  ? `${geometryA.shoulderAngle.toFixed(1)}°`
+                  : '–'}
+              </span>
+            </div>
           
           {/* Elbow Angle */}
-          {riderVisible && geometryA?.elbowAngle !== undefined && (() => {
-            const angle = geometryA.elbowAngle
-            const isRed = angle > ELBOW_ANGLE_CRITICAL
-            const isYellow = !isRed && ((angle >= ELBOW_ANGLE_MAX_WARNING && angle <= ELBOW_ANGLE_CRITICAL) || angle < ELBOW_ANGLE_MIN_WARNING)
-            return (
-              <div 
-                className="px-2 py-1 rounded text-[10px]"
-                style={{
-                  backgroundColor: isRed 
-                    ? 'hsl(0 84% 60%)' 
-                    : isYellow 
-                      ? 'hsl(45 93% 47%)'
-                      : 'hsl(var(--muted) / 0.5)',
-                  color: isRed || isYellow ? 'white' : 'inherit'
-                }}
-              >
-                <span className="font-medium">Ellbogenwinkel: </span>
-                <span className="font-bold">{angle.toFixed(1)}°</span>
-              </div>
-            )
-          })()}
+            <div 
+              className="px-2 py-1 rounded text-[10px]"
+              style={{
+                backgroundColor: riderVisible && geometryA?.elbowAngle !== undefined && geometryA.elbowAngle > ELBOW_ANGLE_CRITICAL
+                  ? 'hsl(0 84% 60%)'
+                  : riderVisible && geometryA?.elbowAngle !== undefined && ((geometryA.elbowAngle >= ELBOW_ANGLE_MAX_WARNING && geometryA.elbowAngle <= ELBOW_ANGLE_CRITICAL) || geometryA.elbowAngle < ELBOW_ANGLE_MIN_WARNING)
+                    ? 'hsl(45 93% 47%)'
+                    : 'hsl(var(--muted) / 0.5)',
+                color: riderVisible && geometryA?.elbowAngle !== undefined && (geometryA.elbowAngle > ELBOW_ANGLE_CRITICAL || (geometryA.elbowAngle >= ELBOW_ANGLE_MAX_WARNING && geometryA.elbowAngle <= ELBOW_ANGLE_CRITICAL) || geometryA.elbowAngle < ELBOW_ANGLE_MIN_WARNING) ? 'white' : 'inherit'
+              }}
+            >
+              <span className="font-medium">Ellbogenwinkel: </span>
+              <span className="font-bold">
+                {riderVisible && geometryA?.elbowAngle !== undefined
+                  ? `${geometryA.elbowAngle.toFixed(1)}°`
+                  : '–'}
+              </span>
+            </div>
           </div>
         </Card>
       </div>
     </div>
   )
 }
+
+export default BikeVisualization;
