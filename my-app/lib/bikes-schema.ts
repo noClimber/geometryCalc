@@ -13,6 +13,9 @@ export const bikeGeometrySchema = z.object({
   seatTubeLength: z.number(),
   chainstayLength: z.number().default(410),
   frontCenter: z.number().default(580),
+  forkOffset: z.number(),
+  wheelbase: z.number(),
+  standoverHeight: z.number(),
 })
 
 /** Zod-Schema für Fahrerdaten. */

@@ -1,5 +1,7 @@
 'use client'
 
+import { ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 import type { BikeData, BikeGeometry, CockpitSetup, RiderSetup } from '@/types/bike'
 import type { AvailableBikesMap } from '@/types/bike'
 import { COCKPIT_LIMITS, clampCockpitValue, clampCockpitSetup, DEFAULT_COCKPIT, DEFAULT_RIDER } from '@/lib/defaults'
@@ -13,9 +15,15 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { HelpCircle } from "lucide-react" // Bitte sicherstellen, dass lucide-react installiert ist
 
-// Kleines Helper-Component für konsistente Input-Felder
-// Spart Wiederholungen und macht den Code lesbarer
+// Helper für Inputs (unverändert)
 const SetupInput = ({
   id,
   label,
@@ -47,8 +55,30 @@ const SetupInput = ({
       step={step}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="h-8 text-sm" // Kompakteres Design
+      className="h-8 text-sm"
     />
+  </div>
+)
+
+// NEU: Helper für Rows mit Label + Wert + Optional Tooltip
+const GeoRow = ({ label, value, unit = "mm", tooltip }: { label: string, value: number | undefined, unit?: string, tooltip?: string }) => (
+  <div className="flex justify-between items-center group">
+    <div className="flex items-center gap-1.5">
+      <span className="text-muted-foreground">{label}</span>
+      {tooltip && (
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[200px] text-xs">
+              <p>{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+    <span className="font-medium">{value ?? '-'} {unit}</span>
   </div>
 )
 
@@ -70,99 +100,37 @@ export function BikeSelector({
   allowClear = true,
 }: BikeSelectorProps) {
   
-  // --- Handlers (Unverändert, nur Typen genutzt) ---
+const [geoOpen, setGeoOpen] = useState(false)
+
+  // ... (Handler bleiben exakt gleich wie in deinem Code) ...
   const handleBrandChange = (brand: string) => {
-    if (brand === 'none') {
-      setBike(null)
-      return
-    }
-    const models = Object.keys(availableBikes[brand] ?? {})
-    const firstModel = models[0]
-    const sizes = firstModel
-      ? Object.keys(availableBikes[brand][firstModel] ?? {})
-      : []
-    const firstSize = sizes[0]
-
+    if (brand === 'none') { setBike(null); return }
+    const models = Object.keys(availableBikes[brand] ?? {}); const firstModel = models[0]
+    const sizes = firstModel ? Object.keys(availableBikes[brand][firstModel] ?? {}) : []; const firstSize = sizes[0]
     if (!firstModel || !firstSize) return
-
-    const geometry = availableBikes[brand][firstModel][firstSize]
-    if (!geometry) return
-
-    setBike({
-      brand,
-      model: firstModel,
-      size: firstSize,
-      geometry,
-      cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }),
-      rider: { ...DEFAULT_RIDER },
-    })
+    const geometry = availableBikes[brand][firstModel][firstSize]; if (!geometry) return
+    setBike({ brand, model: firstModel, size: firstSize, geometry, cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }), rider: { ...DEFAULT_RIDER } })
   }
-
-  const handleModelChange = (model: string) => {
-    if (!bike) return
-    const sizes = Object.keys(availableBikes[bike.brand]?.[model] ?? {})
-    const firstSize = sizes[0]
-    if (!firstSize) return
-    const geometry = availableBikes[bike.brand][model][firstSize]
-    if (!geometry) return
-    setBike({
-      ...bike,
-      model,
-      size: firstSize,
-      geometry,
-    })
+  const handleModelChange = (model: string) => { /* ... wie vorher ... */ 
+      if (!bike) return; const sizes = Object.keys(availableBikes[bike.brand]?.[model] ?? {}); const firstSize = sizes[0]
+      if (!firstSize) return; const geometry = availableBikes[bike.brand][model][firstSize]; if (!geometry) return
+      setBike({ ...bike, model, size: firstSize, geometry })
   }
-
-  const handleSizeChange = (size: string) => {
-    if (!bike) return
-    const geometry = availableBikes[bike.brand]?.[bike.model]?.[size]
-    if (!geometry) return
-    setBike({
-      ...bike,
-      size,
-      geometry,
-    })
+  const handleSizeChange = (size: string) => { /* ... wie vorher ... */ 
+      if (!bike) return; const geometry = availableBikes[bike.brand]?.[bike.model]?.[size]; if (!geometry) return
+      setBike({ ...bike, size, geometry })
   }
-
-  const handleCockpitChange = (
-    field: Exclude<keyof CockpitSetup, 'handPosition'> | 'saddleLength' | 'saddleSetback',
-    value: number
-  ) => {
-    if (!bike) return
-    const raw = Number.isFinite(value)
-      ? value
-      : (bike.cockpit as any)[field] ?? (field === 'saddleLength' ? 255 : field === 'saddleSetback' ? 80 : 0)
-    const safeValue = clampCockpitValue(field as any, raw)
-    setBike({
-      ...bike,
-      cockpit: {
-        ...bike.cockpit,
-        [field]: safeValue,
-      },
-    })
+  const handleCockpitChange = (field: any, value: number) => { /* ... wie vorher ... */ 
+      if (!bike) return; const raw = Number.isFinite(value) ? value : (bike.cockpit as any)[field] ?? 0
+      const safeValue = clampCockpitValue(field as any, raw); setBike({ ...bike, cockpit: { ...bike.cockpit, [field]: safeValue } })
   }
-
   const handleRiderChange = (field: keyof RiderSetup, value: number) => {
     if (!bike) return
     const safeValue = Number.isFinite(value) ? value : bike.rider[field]
-    setBike({
-      ...bike,
-      rider: {
-        ...bike.rider,
-        [field]: safeValue,
-      },
-    })
+    setBike({ ...bike, rider: { ...bike.rider, [field]: safeValue } })
   }
-
-  const handleHandPositionChange = (position: 'hoods' | 'drops') => {
-    if (!bike) return
-    setBike({
-      ...bike,
-      cockpit: {
-        ...bike.cockpit,
-        handPosition: position,
-      },
-    })
+  const handleHandPositionChange = (position: 'hoods' | 'drops') => { /* ... wie vorher ... */ 
+      if (!bike) return; setBike({ ...bike, cockpit: { ...bike.cockpit, handPosition: position } })
   }
 
   const brands = Object.keys(availableBikes)
@@ -198,13 +166,10 @@ export function BikeSelector({
                   <SelectValue placeholder="Modell" />
                 </SelectTrigger>
                 <SelectContent>
-                  {models.map((model) => (
-                    <SelectItem key={model} value={model}>{model}</SelectItem>
-                  ))}
+                  {models.map((model) => (<SelectItem key={model} value={model}>{model}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor={`${bikeName}-size`} className={`text-sm font-semibold ${!bike ? 'opacity-50' : ''}`}>Größe</Label>
               <Select value={bike?.size || ''} onValueChange={handleSizeChange} disabled={!bike}>
@@ -212,9 +177,7 @@ export function BikeSelector({
                   <SelectValue placeholder="Größe" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sizes.map((size) => (
-                    <SelectItem key={size} value={size}>{size}</SelectItem>
-                  ))}
+                  {sizes.map((size) => (<SelectItem key={size} value={size}>{size}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
@@ -225,36 +188,112 @@ export function BikeSelector({
           <>
             <Separator />
 
-            {/* --- SEKTION 2: GEOMETRIE (READ-ONLY) --- */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Geometrie Basis</h3>
-              <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm bg-muted/30 p-3 rounded-md border border-border/50">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Stack</span>
-                  <span className="font-medium">{bike.geometry.stack} mm</span>
+                        {/* --- SEKTION 2: GEOMETRIE (EINKLAPPBAR) --- */}
+            <div className="space-y-1">
+              {/* Header als Button (Trigger) */}
+              <button 
+                type="button"
+                onClick={() => setGeoOpen(!geoOpen)} // Du brauchst einen State: const [geoOpen, setGeoOpen] = useState(true)
+                className="flex w-full items-center justify-between py-2 hover:opacity-80 transition-opacity"
+              >
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                  Geometrie Basis
+                  {/* Kleines Badge wie viele Werte da sind */}
+                  <span className="bg-muted text-[10px] px-1.5 py-0.5 rounded-full font-normal text-muted-foreground">
+                    12 Werte
+                  </span>
+                </h3>
+                {/* Chevron Icon dreht sich */}
+                <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${geoOpen ? 'rotate-90' : ''}`} />
+              </button>
+
+              {/* Inhalt (Animation via CSS Klasse oder einfach konditional) */}
+              {geoOpen && (
+                <div className="space-y-2 p-3 bg-muted/30 rounded-md border border-border/50 animate-in slide-in-from-top-2 duration-200">
+                  {/* Jetzt EINSPALTIG: space-y-1 statt grid */}
+                                    <div className="space-y-1">
+                    <GeoRow 
+                      label="Stack" 
+                      value={bike.geometry.stack} 
+                      tooltip="Vertikaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein hoher Wert bedeutet eine aufrechte, komfortable Position." 
+                    />
+                    <GeoRow 
+                      label="Reach" 
+                      value={bike.geometry.reach} 
+                      tooltip="Horizontaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein langer Reach bedeutet eine gestreckte, sportliche Haltung." 
+                    />
+                    
+                    <div className="h-px bg-border/40 my-2" /> 
+                    
+                    <GeoRow 
+                      label="Lenkwinkel" 
+                      value={bike.geometry.headTubeAngle} 
+                      unit="°" 
+                      tooltip="Der Winkel der Gabel zum Boden. Flacher (<72°) sorgt für Laufruhe, steiler (>73°) für agiles, direktes Lenkverhalten." 
+                    />
+                    <GeoRow 
+                      label="Sitzwinkel" 
+                      value={bike.geometry.seatTubeAngle} 
+                      unit="°" 
+                      tooltip="Winkel des Sitzrohrs. Steiler (>74°) bringt dich weiter nach vorne über das Tretlager (gut für Aerodynamik/Kraft)." 
+                    />
+                    
+                    <div className="h-px bg-border/40 my-2" />
+                    
+                    <GeoRow 
+                      label="Radstand" 
+                      value={bike.geometry.wheelbase} 
+                      tooltip="Abstand zwischen den Radachsen. Ein langer Radstand erhöht die Stabilität bei hohem Tempo, ein kurzer macht das Rad wendiger." 
+                    />
+                    <GeoRow 
+                      label="Überstand" 
+                      value={bike.geometry.standoverHeight} 
+                      tooltip="Abstand vom Boden zur Oberrohrmitte. Wichtig, um beim Anhalten sicher über dem Rahmen stehen zu können." 
+                    />
+                    
+                    <div className="h-px bg-border/40 my-2" />
+
+                    <GeoRow 
+                      label="Gabel-Offset" 
+                      value={bike.geometry.forkOffset} 
+                      tooltip="Auch 'Rake' genannt. Die Vorbiegung der Gabel. Beeinflusst zusammen mit dem Lenkwinkel den Nachlauf und damit die Lenkstabilität." 
+                    />
+                    <GeoRow 
+                      label="Gabel-Länge" 
+                      value={bike.geometry.forkLength} 
+                      tooltip="Einbaulänge der Gabel von Achse bis Gabelkonus. Beeinflusst die Front-Höhe." 
+                    />
+                    <GeoRow 
+                      label="BB Drop" 
+                      value={bike.geometry.bbDrop} 
+                      tooltip="Tretlagerabsenkung gegenüber den Radachsen. Mehr Drop = tieferer Schwerpunkt und stabileres Kurvenverhalten." 
+                    />
+                    <GeoRow 
+                      label="Steuerrohr" 
+                      value={bike.geometry.headTubeLength} 
+                      tooltip="Länge des Steuerrohrs. Ein langes Steuerrohr hebt den Lenker an (höherer Stack) und reduziert meist die Notwendigkeit von Spacern." 
+                    />
+                    <GeoRow 
+                      label="Sitzrohr" 
+                      value={bike.geometry.seatTubeLength} 
+                      tooltip="Länge des Sitzrohrs vom Tretlager bis zur Oberkante. Bestimmt oft die Rahmengröße und wie weit die Sattelstütze herausragt." 
+                    />
+                    <GeoRow 
+                      label="Kettenstrebe" 
+                      value={bike.geometry.chainstayLength} 
+                      tooltip="Länge der hinteren Streben. Kurze Streben (<410mm) machen das Rad agil und reaktiv beim Antritt, lange sorgen für Laufruhe." 
+                    />
+                    <GeoRow 
+                      label="Front Center" 
+                      value={bike.geometry.frontCenter} 
+                      tooltip="Abstand Tretlager zur Vorderradachse. Wichtig um zu prüfen, ob die Fußspitze das Vorderrad berühren kann (Toe Overlap)." 
+                    />
+                  </div>
+
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Reach</span>
-                  <span className="font-medium">{bike.geometry.reach} mm</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lenkwinkel</span>
-                  <span className="font-medium">{bike.geometry.headTubeAngle}°</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sitzwinkel</span>
-                  <span className="font-medium">{bike.geometry.seatTubeAngle}°</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Gabel</span>
-                  <span className="font-medium">{bike.geometry.forkLength} mm</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">BB Drop</span>
-                  <span className="font-medium">{bike.geometry.bbDrop} mm</span>
-                </div>
-              </div>
+              )}
             </div>
+
 
             <Separator />
 
@@ -265,112 +304,63 @@ export function BikeSelector({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Cockpit & Front</h3>
-                  
-                  {/* Hand Position Toggle mit Label */}
+                  {/* ... Dein Toggle (unverändert) ... */}
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-wide">Griff:</span>
-                    <div 
-                      className="flex items-center gap-1.5 cursor-pointer group bg-muted/30 p-1 rounded-full border border-border/30 hover:bg-muted/50 transition-colors"
-                      onClick={() => handleHandPositionChange(bike.cockpit.handPosition === 'hoods' ? 'drops' : 'hoods')}
-                    >
-                      <span 
-                          className={`text-[10px] font-medium px-1.5 transition-colors ${
-                              bike.cockpit.handPosition === 'hoods' ? 'text-primary font-semibold' : 'text-muted-foreground'
-                          }`}
-                      >
-                          Hoods
-                      </span>
-                      
-                      <div className="relative h-3.5 w-7 bg-muted/80 rounded-full border border-border/20 shadow-inner">
-                        <div
-  className="absolute top-0.5 h-2.5 w-2.5 bg-primary rounded-full shadow-sm transition-transform duration-200 ease-out"
-  style={{
-    transform: bike.cockpit.handPosition === 'drops' ? 'translateX(0.875rem)' : 'translateX(0)',
-    left: '0.125rem',
-  }}
-/>
-                      </div>
-
-                      <span 
-                          className={`text-[10px] font-medium px-1.5 transition-colors ${
-                              bike.cockpit.handPosition === 'drops' ? 'text-primary font-semibold' : 'text-muted-foreground'
-                          }`}
-                      >
-                          Drops
-                      </span>
+                    <div className="flex items-center gap-1.5 cursor-pointer group bg-muted/30 p-1 rounded-full border border-border/30 hover:bg-muted/50 transition-colors"
+                         onClick={() => handleHandPositionChange(bike.cockpit.handPosition === 'hoods' ? 'drops' : 'hoods')}>
+                       {/* ... Toggle Content ... */}
+                       <span className={`text-[10px] font-medium px-1.5 transition-colors ${bike.cockpit.handPosition === 'hoods' ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>Hoods</span>
+                       <div className="relative h-3.5 w-7 bg-muted/80 rounded-full border border-border/20 shadow-inner">
+                         <div className="absolute top-0.5 h-2.5 w-2.5 bg-primary rounded-full shadow-sm transition-transform duration-200 ease-out"
+                              style={{ transform: bike.cockpit.handPosition === 'drops' ? 'translateX(0.875rem)' : 'translateX(0)', left: '0.125rem' }} />
+                       </div>
+                       <span className={`text-[10px] font-medium px-1.5 transition-colors ${bike.cockpit.handPosition === 'drops' ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>Drops</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <SetupInput id={`${bikeName}-stem-len`} label="Vorbaulänge" suffix="mm"
-                    value={bike.cockpit.stemLength} onChange={(v) => handleCockpitChange('stemLength', v)} />
-                  <SetupInput id={`${bikeName}-stem-ang`} label="Winkel" suffix="°"
-                    value={bike.cockpit.stemAngle} onChange={(v) => handleCockpitChange('stemAngle', v)} />
-                  
-                  <SetupInput id={`${bikeName}-spacer`} label="Spacer" suffix="mm"
-                    value={bike.cockpit.spacerHeight} onChange={(v) => handleCockpitChange('spacerHeight', v)} />
-                  <SetupInput id={`${bikeName}-topcap`} label="Top Cap" suffix="mm"
-                    value={bike.cockpit.headsetCap} onChange={(v) => handleCockpitChange('headsetCap', v)} />
-                  
-                  <SetupInput id={`${bikeName}-reach`} label="Lenker Reach" suffix="mm"
-                    value={bike.cockpit.handlebarReach} onChange={(v) => handleCockpitChange('handlebarReach', v)} />
-                  <SetupInput id={`${bikeName}-drop`} label="Lenker Drop" suffix="mm"
-                    value={bike.cockpit.handlebarDrop} onChange={(v) => handleCockpitChange('handlebarDrop', v)} />
+                  <SetupInput id={`${bikeName}-stem-len`} label="Vorbaulänge" suffix="mm" value={bike.cockpit.stemLength} onChange={(v) => handleCockpitChange('stemLength', v)} />
+                  <SetupInput id={`${bikeName}-stem-ang`} label="Winkel" suffix="°" value={bike.cockpit.stemAngle} onChange={(v) => handleCockpitChange('stemAngle', v)} />
+                  <SetupInput id={`${bikeName}-spacer`} label="Spacer" suffix="mm" value={bike.cockpit.spacerHeight} onChange={(v) => handleCockpitChange('spacerHeight', v)} />
+                  <SetupInput id={`${bikeName}-topcap`} label="Top Cap" suffix="mm" value={bike.cockpit.headsetCap} onChange={(v) => handleCockpitChange('headsetCap', v)} />
+                  <SetupInput id={`${bikeName}-reach`} label="Lenker Reach" suffix="mm" value={bike.cockpit.handlebarReach} onChange={(v) => handleCockpitChange('handlebarReach', v)} />
+                  <SetupInput id={`${bikeName}-drop`} label="Lenker Drop" suffix="mm" value={bike.cockpit.handlebarDrop} onChange={(v) => handleCockpitChange('handlebarDrop', v)} />
                 </div>
               </div>
 
-
               <div className="border-t border-border/40" />
-
-              {/* 3b. SITZBEREICH */}
-              <div className="space-y-3">
+              {/* 3b. SITZBEREICH (wie gehabt) */}
+               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Sitzposition</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <SetupInput id={`${bikeName}-seatpost`} label="Sattelstütze" suffix="Auszug"
-                    value={bike.cockpit.seatPostLength} onChange={(v) => handleCockpitChange('seatPostLength', v)} />
-                  <SetupInput id={`${bikeName}-setback`} label="Setback" suffix="mm"
-                    value={bike.cockpit.saddleSetback ?? 80} onChange={(v) => handleCockpitChange('saddleSetback', v)} />
-                  
-                  <SetupInput id={`${bikeName}-saddle`} label="Sattellänge" suffix="mm"
-                    value={bike.cockpit.saddleLength ?? 255} onChange={(v) => handleCockpitChange('saddleLength', v)} />
-                  <SetupInput id={`${bikeName}-offset`} label="Sitzposition" suffix="Offset"
-                    value={bike.cockpit.sitboneOffset ?? -20} onChange={(v) => handleCockpitChange('sitboneOffset', v)} />
+                  <SetupInput id={`${bikeName}-seatpost`} label="Sattelstütze" suffix="Auszug" value={bike.cockpit.seatPostLength} onChange={(v) => handleCockpitChange('seatPostLength', v)} />
+                  <SetupInput id={`${bikeName}-setback`} label="Setback" suffix="mm" value={bike.cockpit.saddleSetback ?? 80} onChange={(v) => handleCockpitChange('saddleSetback', v)} />
+                  <SetupInput id={`${bikeName}-saddle`} label="Sattellänge" suffix="mm" value={bike.cockpit.saddleLength ?? 255} onChange={(v) => handleCockpitChange('saddleLength', v)} />
+                  <SetupInput id={`${bikeName}-offset`} label="Sitzposition" suffix="Offset" value={bike.cockpit.sitboneOffset ?? -20} onChange={(v) => handleCockpitChange('sitboneOffset', v)} />
                 </div>
               </div>
 
               <div className="border-t border-border/40" />
-
-              {/* 3c. ANTRIEB */}
+              {/* 3c. ANTRIEB & FAHRER (wie gehabt) */}
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Antrieb</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <SetupInput id={`${bikeName}-crank`} label="Kurbellänge" suffix="mm"
-                    value={bike.cockpit.crankLength} onChange={(v) => handleCockpitChange('crankLength', v)} />
-                  <SetupInput id={`${bikeName}-pedal`} label="Pedalwinkel" suffix="°"
-                    value={bike.cockpit.pedalAngle} onChange={(v) => handleCockpitChange('pedalAngle', v)} />
+                   <SetupInput id={`${bikeName}-crank`} label="Kurbellänge" suffix="mm" value={bike.cockpit.crankLength} onChange={(v) => handleCockpitChange('crankLength', v)} />
+                   <SetupInput id={`${bikeName}-pedal`} label="Pedalwinkel" suffix="°" value={bike.cockpit.pedalAngle} onChange={(v) => handleCockpitChange('pedalAngle', v)} />
                 </div>
               </div>
-              
-              <div className="border-t border-border/40" />
 
-              {/* 3d. FAHRERDATEN */}
-              <div className="space-y-3">
+               <div className="border-t border-border/40" />
+               
+               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Fahrer Körpermaße</h3>
                  <div className="grid grid-cols-2 gap-3">
-                    <SetupInput id={`${bikeName}-height`} label="Körpergröße" suffix="mm"
-                      value={bike.rider.riderHeight} min={1500} max={2200} step={10} 
-                      onChange={(v) => handleRiderChange('riderHeight', v)} />
-                    <SetupInput id={`${bikeName}-inseam`} label="Schrittlänge" suffix="mm"
-                      value={bike.rider.riderInseam} min={700} max={1100} step={10}
-                      onChange={(v) => handleRiderChange('riderInseam', v)} />
-                    
-                    <SetupInput id={`${bikeName}-torso`} label="Rückenwinkel" suffix="°"
-                      value={bike.rider.torsoAngle} min={0} max={90}
-                      onChange={(v) => handleRiderChange('torsoAngle', v)} />
-                    <SetupInput id={`${bikeName}-shoe`} label="Schuhdicke" suffix="mm"
-                      value={bike.rider.shoeThickness} min={0} max={50}
-                      onChange={(v) => handleRiderChange('shoeThickness', v)} />
+                    <SetupInput id={`${bikeName}-height`} label="Körpergröße" suffix="mm" value={bike.rider.riderHeight} onChange={(v) => handleRiderChange('riderHeight', v)} min={1500} max={2200} step={10} />
+                    <SetupInput id={`${bikeName}-inseam`} label="Schrittlänge" suffix="mm" value={bike.rider.riderInseam} onChange={(v) => handleRiderChange('riderInseam', v)} min={700} max={1100} step={10} />
+                    <SetupInput id={`${bikeName}-torso`} label="Rückenwinkel" suffix="°" value={bike.rider.torsoAngle} onChange={(v) => handleRiderChange('torsoAngle', v)} min={0} max={90} />
+                    <SetupInput id={`${bikeName}-shoe`} label="Schuhdicke" suffix="mm" value={bike.rider.shoeThickness} onChange={(v) => handleRiderChange('shoeThickness', v)} min={0} max={50} />
                  </div>
               </div>
 

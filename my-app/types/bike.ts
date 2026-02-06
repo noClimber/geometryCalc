@@ -9,6 +9,9 @@ export type BikeGeometry = {
   seatTubeLength: number
   chainstayLength: number
   frontCenter: number
+  forkOffset: number
+  wheelbase: number
+  standoverHeight: number
 }
 
 export type CockpitSetup = {
