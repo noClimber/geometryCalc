@@ -737,7 +737,7 @@ const BikeVisualization = ({
         </div>
         {/* Measurements Overlay - Collapsible */}
         {measurementsExpanded && (
-          <div onWheel={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} className="absolute bottom-2 left-2 right-2 md:right-auto md:w-80 z-50 max-h-[40vh] overflow-y-auto shadow-xl border border-border bg-card rounded-lg">
+          <div onWheel={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} className="relative mt-2 md:absolute md:top-[7.5rem] md:left-4 z-50 w-full md:w-80 max-h-[40vh] md:max-h-[70vh] md:resize-y md:min-h-[200px] overflow-y-auto shadow-sm md:shadow-xl border border-border bg-card rounded-lg flex-shrink-0">
             {/* Sticky close button */}
             <button
               onClick={() => setMeasurementsExpanded(false)}
