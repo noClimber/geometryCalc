@@ -32,6 +32,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } from 'react'
 import { HelpCircle } from 'lucide-react'
 
+const round = (v: number) => Math.round(v * 100) / 100
+
 type BikeVisualizationProps = {
   bikeA: BikeData | null
   bikeB: BikeData | null
@@ -222,12 +224,12 @@ const BikeVisualization = ({
 
   const xs = allPoints.map((p) => p.x)
   const ys = allPoints.map((p) => p.y)
-  const minX = Math.min(...xs) - 50
-  const maxX = Math.max(...xs) + 50
-  const minY = Math.min(...ys) - 50
-  const maxY = Math.max(...ys) + 50
-  const width = maxX - minX
-  const height = maxY - minY
+  const minX = round(Math.min(...xs) - 50)
+  const maxX = round(Math.max(...xs) + 50)
+  const minY = round(Math.min(...ys) - 50)
+  const maxY = round(Math.max(...ys) + 50)
+  const width = round(maxX - minX)
+  const height = round(maxY - minY)
 
   // Berechne Messlinie und Distanz
   let measureDistance = 0
@@ -250,7 +252,7 @@ const BikeVisualization = ({
         measureDistance = distPx / SCALE // zurück in mm
         measureDx = dx / SCALE // X-Komponente in mm
         measureDy = dy / SCALE // Y-Komponente in mm
-        measureLine = { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y }
+        measureLine = { x1: round(p1.x), y1: round(p1.y), x2: round(p2.x), y2: round(p2.y) }
       }
     }
   }
@@ -287,10 +289,10 @@ const BikeVisualization = ({
           return (
             <line
               key={`${from}-${to}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
+              x1={round(a.x)}
+              y1={round(a.y)}
+              x2={round(b.x)}
+              y2={round(b.y)}
               stroke={color}
               strokeWidth="2"
               opacity={opacity}
@@ -306,10 +308,10 @@ const BikeVisualization = ({
           return (
             <line
               key={`rider-${from}-${to}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
+              x1={round(a.x)}
+              y1={round(a.y)}
+              x2={round(b.x)}
+              y2={round(b.y)}
               stroke="#22c55e"
               strokeWidth="3"
               opacity={opacity}
@@ -325,15 +327,15 @@ const BikeVisualization = ({
           const neckAngleDeg = 120
           return (
             <ellipse
-              cx={points.headCenter.x}
-              cy={points.headCenter.y}
-              rx={headWidth / 2}
-              ry={headHeight / 2}
+              cx={round(points.headCenter.x)}
+              cy={round(points.headCenter.y)}
+              rx={round(headWidth / 2)}
+              ry={round(headHeight / 2)}
               fill="none"
               stroke="#22c55e"
               strokeWidth="3"
               opacity={opacity}
-              transform={`rotate(${neckAngleDeg + 90}, ${points.headCenter.x}, ${points.headCenter.y})`}
+              transform={`rotate(${neckAngleDeg + 90}, ${round(points.headCenter.x)}, ${round(points.headCenter.y)})`}
             />
           )
         })()}
@@ -357,10 +359,10 @@ const BikeVisualization = ({
             for (let i = 0; i < spokeCount; i++) {
               const rad = (i * 2 * Math.PI) / spokeCount
               spokes.push({
-                x1: p.x + spokeHubR * Math.cos(rad),
-                y1: p.y + spokeHubR * Math.sin(rad),
-                x2: p.x + rimRadius * Math.cos(rad),
-                y2: p.y + rimRadius * Math.sin(rad),
+                x1: round(p.x + spokeHubR * Math.cos(rad)),
+                y1: round(p.y + spokeHubR * Math.sin(rad)),
+                x2: round(p.x + rimRadius * Math.cos(rad)),
+                y2: round(p.y + rimRadius * Math.sin(rad)),
               })
             }
           } else {
@@ -370,19 +372,19 @@ const BikeVisualization = ({
             for (let i = 0; i < half; i++) {
               const startRad = (i * 2 * Math.PI) / half
               spokes.push({
-                x1: p.x + spokeHubR * Math.cos(startRad),
-                y1: p.y + spokeHubR * Math.sin(startRad),
-                x2: p.x + rimRadius * Math.cos(startRad + crossRad),
-                y2: p.y + rimRadius * Math.sin(startRad + crossRad),
+                x1: round(p.x + spokeHubR * Math.cos(startRad)),
+                y1: round(p.y + spokeHubR * Math.sin(startRad)),
+                x2: round(p.x + rimRadius * Math.cos(startRad + crossRad)),
+                y2: round(p.y + rimRadius * Math.sin(startRad + crossRad)),
               })
             }
             for (let i = 0; i < half; i++) {
               const startRad = (i * 2 * Math.PI) / half + Math.PI / half
               spokes.push({
-                x1: p.x + spokeHubR * Math.cos(startRad),
-                y1: p.y + spokeHubR * Math.sin(startRad),
-                x2: p.x + rimRadius * Math.cos(startRad - crossRad),
-                y2: p.y + rimRadius * Math.sin(startRad - crossRad),
+                x1: round(p.x + spokeHubR * Math.cos(startRad)),
+                y1: round(p.y + spokeHubR * Math.sin(startRad)),
+                x2: round(p.x + rimRadius * Math.cos(startRad - crossRad)),
+                y2: round(p.y + rimRadius * Math.sin(startRad - crossRad)),
               })
             }
           }
@@ -406,8 +408,8 @@ const BikeVisualization = ({
               ))}
               {/* Bremsscheibe */}
               <circle
-                cx={p.x} cy={p.y}
-                r={discRadius}
+                cx={round(p.x)} cy={round(p.y)}
+                r={round(discRadius)}
                 stroke="#94a3b8"
                 strokeWidth="3"
                 strokeDasharray="8,4"
@@ -420,7 +422,7 @@ const BikeVisualization = ({
                   {cassetteRadii.map((r) => (
                     <circle
                       key={`cassette-${r}`}
-                      cx={p.x} cy={p.y}
+                      cx={round(p.x)} cy={round(p.y)}
                       r={r}
                       stroke="#64748b"
                       strokeWidth="2"
@@ -432,8 +434,8 @@ const BikeVisualization = ({
               )}
               {/* Aero-Carbon-Felge (dicker Ring) */}
               <circle
-                cx={p.x} cy={p.y}
-                r={aeroRimRadius}
+                cx={round(p.x)} cy={round(p.y)}
+                r={round(aeroRimRadius)}
                 stroke={color}
                 strokeWidth="14"
                 fill="none"
@@ -441,8 +443,8 @@ const BikeVisualization = ({
               />
               {/* Felgenbett (innen) */}
               <circle
-                cx={p.x} cy={p.y}
-                r={rimRadius}
+                cx={round(p.x)} cy={round(p.y)}
+                r={round(rimRadius)}
                 stroke={color}
                 strokeWidth="1.5"
                 fill="none"
@@ -450,8 +452,8 @@ const BikeVisualization = ({
               />
               {/* Reifen (außen, dunkelgrau) */}
               <circle
-                cx={p.x} cy={p.y}
-                r={tireRadius}
+                cx={round(p.x)} cy={round(p.y)}
+                r={round(tireRadius)}
                 stroke="#444"
                 strokeWidth="4"
                 fill="none"
@@ -459,7 +461,7 @@ const BikeVisualization = ({
               />
               {/* Nabe */}
               <circle
-                cx={p.x} cy={p.y}
+                cx={round(p.x)} cy={round(p.y)}
                 r={hubR}
                 fill={color}
                 stroke="none"
@@ -472,9 +474,9 @@ const BikeVisualization = ({
         {/* Kettenblatt am Tretlager */}
         {points.bb && (
           <circle
-            cx={points.bb.x}
-            cy={points.bb.y}
-            r={75 * SCALE}
+            cx={round(points.bb.x)}
+            cy={round(points.bb.y)}
+            r={round(75 * SCALE)}
             stroke={color}
             strokeWidth="1.5"
             strokeDasharray="4,4"
@@ -485,8 +487,8 @@ const BikeVisualization = ({
 
         {/* Schaltwerk an der Hinterachse */}
         {points.rearWheel && (() => {
-          const rx = points.rearWheel.x
-          const ry = points.rearWheel.y
+          const rx = round(points.rearWheel.x)
+          const ry = round(points.rearWheel.y)
           const topPulleyY = ry + 28
           const botPulleyY = ry + 44
           return (
@@ -521,8 +523,8 @@ const BikeVisualization = ({
           return (
             <circle
               key={id}
-              cx={p.x}
-              cy={p.y}
+              cx={round(p.x)}
+              cy={round(p.y)}
               r={isSelected ? "6" : "4"}
               fill={isSelected ? "#f39c12" : pointColor}
               opacity={opacity}

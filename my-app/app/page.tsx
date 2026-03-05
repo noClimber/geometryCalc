@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { BikeSelector } from '@/components/bike-selector'
 import BikeVisualization from '@/components/bike-visualization'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,8 @@ BikeData,
   RiderSetup,
   AvailableBikesMap,
 } from '@/types/bike'
-import { Info , Heart } from 'lucide-react'
+import { Info, Heart, Share2, Check } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -66,8 +67,24 @@ function getFirstAvailableBike(): BikeData | null {
   }
 }
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  const stateParam = searchParams.get('state')
+
+  const getSharedState = (): { a?: BikeData; b?: BikeData | null } | null => {
+    if (!stateParam) return null
+    try {
+      return JSON.parse(decodeURIComponent(atob(stateParam)))
+    } catch {
+      return null
+    }
+  }
+  const sharedState = getSharedState()
+
   const [bikeA, setBikeA] = useState<BikeData>(() => {
+    if (sharedState?.a) return sharedState.a
     const first = getFirstAvailableBike()
     if (first) return first
     return {
@@ -94,10 +111,43 @@ export default function Home() {
     }
   })
 
-  const [bikeB, setBikeB] = useState<BikeData | null>(null)
+  const [bikeB, setBikeB] = useState<BikeData | null>(sharedState?.b ?? null)
   // Alignment mode removed
   const [activeTab, setActiveTab] = useState('bikeA')
   const [isPedaling, setIsPedaling] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+
+  // URL nach dem Laden bereinigen
+  useEffect(() => {
+    if (stateParam) {
+      router.replace('/', { scroll: false })
+    }
+  }, [stateParam, router])
+
+  const handleShare = () => {
+    const stateObj = { a: bikeA, b: bikeB }
+    const encoded = btoa(encodeURIComponent(JSON.stringify(stateObj)))
+    const shareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2000)
+      })
+    } else {
+      // Fallback für HTTP / lokale IPs ohne Secure Context
+      const textarea = document.createElement('textarea')
+      textarea.value = shareUrl
+      textarea.style.position = 'absolute'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    }
+  }
 
   // Auto-increment pedal angle when isPedaling is true
   useEffect(() => {
@@ -145,6 +195,19 @@ export default function Home() {
                 </span>
               </div>
 
+              <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                className="gap-1.5 h-8 text-xs"
+              >
+                {isCopied ? (
+                  <><Check className="h-3.5 w-3.5 text-green-500" />Kopiert!</>
+                ) : (
+                  <><Share2 className="h-3.5 w-3.5" />Teilen</>
+                )}
+              </Button>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
@@ -185,6 +248,7 @@ export default function Home() {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
             {/* Hier nur noch EIN erklärender Satz */}
             <p className="text-xs text-muted-foreground mt-1">
@@ -238,5 +302,13 @@ export default function Home() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   )
 }

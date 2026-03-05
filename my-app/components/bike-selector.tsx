@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { BikeData, BikeGeometry, CockpitSetup, RiderSetup } from '@/types/bike'
 import type { AvailableBikesMap } from '@/types/bike'
 import { COCKPIT_LIMITS, clampCockpitValue, clampCockpitSetup, DEFAULT_COCKPIT, DEFAULT_RIDER } from '@/lib/defaults'
@@ -133,8 +133,23 @@ export function BikeSelector({
 }: BikeSelectorProps) {
   
 const [geoOpen, setGeoOpen] = useState(false)
-  const [customName, setCustomName] = useState('Mein Bike')
-  const [customGeo, setCustomGeo] = useState<BikeGeometry>({ ...DEFAULT_GEOMETRY })
+  const [customName, setCustomName] = useState<string>(
+    bike?.brand === '__custom__' ? bike.model : 'Mein Bike'
+  )
+  const [customGeo, setCustomGeo] = useState<BikeGeometry>(
+    bike?.brand === '__custom__' ? { ...bike.geometry } : { ...DEFAULT_GEOMETRY }
+  )
+
+  useEffect(() => {
+    if (bike?.brand === '__custom__') {
+      setCustomName(bike.model)
+      setCustomGeo(bike.geometry)
+    } else {
+      setCustomName('Mein Bike')
+      setCustomGeo({ ...DEFAULT_GEOMETRY })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bike?.brand, bike?.model, bike?.geometry])
 
   const handleBrandChange = (brand: string) => {
     if (brand === 'none') { setBike(null); return }
