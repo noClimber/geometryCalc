@@ -30,7 +30,8 @@ import {
 import { Card } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useState, useRef, type MouseEvent, type WheelEvent, type TouchEvent } from 'react'
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, ZoomIn, ZoomOut, Maximize } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 const round = (v: number) => Math.round(v * 100) / 100
 
@@ -48,6 +49,9 @@ const BikeVisualization = ({
   setIsPedaling,
 }: BikeVisualizationProps) => {
   const [viewState, setViewState] = useState({ zoom: 0.7, pan: { x: 120, y: -170 } })
+  const handleZoomIn = () => setViewState(prev => ({ ...prev, zoom: Math.min(5, prev.zoom * 1.2) }))
+  const handleZoomOut = () => setViewState(prev => ({ ...prev, zoom: Math.max(0.5, prev.zoom / 1.2) }))
+  const handleResetView = () => setViewState({ zoom: 0.7, pan: { x: 120, y: -170 } })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [measurePoints, setMeasurePoints] = useState<Array<{id: string, bike: 'A' | 'B'}>>([])
@@ -780,6 +784,29 @@ const BikeVisualization = ({
               </span>
             </div>
           )}
+        </div>
+        {/* Zoom Controls */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="secondary" size="icon" onClick={handleZoomIn} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border"><ZoomIn className="h-4 w-4" /></Button>
+              </TooltipTrigger>
+              <TooltipContent side="left"><p className="text-xs">Vergrößern</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="secondary" size="icon" onClick={handleZoomOut} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border"><ZoomOut className="h-4 w-4" /></Button>
+              </TooltipTrigger>
+              <TooltipContent side="left"><p className="text-xs">Verkleinern</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="secondary" size="icon" onClick={handleResetView} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border mt-1"><Maximize className="h-4 w-4" /></Button>
+              </TooltipTrigger>
+              <TooltipContent side="left"><p className="text-xs">Zentrieren</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         </div>
       </Card>

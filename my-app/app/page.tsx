@@ -180,9 +180,18 @@ function HomeContent() {
   }, [isPedaling, bikeB])
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-background">
-      {/* Sidebar - auf Mobile oben, auf Desktop links */}
-      <div className="w-full md:w-[380px] h-[50vh] md:h-screen border-b md:border-r md:border-b-0 border-border bg-card overflow-y-auto flex flex-col">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-background relative">
+      {/* SVG/Visualization - sticky auf Mobile, rechts auf Desktop */}
+      <div className="w-full h-[45vh] md:h-screen md:flex-1 bg-background p-2 md:p-6 sticky top-0 md:relative z-10 border-b md:border-b-0 border-border shadow-sm md:shadow-none md:order-last">
+        <BikeVisualization
+            bikeA={bikeA}
+            bikeB={bikeB}
+            isPedaling={isPedaling}
+            setIsPedaling={setIsPedaling}
+          />
+      </div>
+      {/* Sidebar - auf Mobile unten scrollbar, auf Desktop links */}
+      <div className="w-full md:w-[380px] bg-card flex flex-col md:h-screen md:overflow-y-auto z-0 pb-10 md:pb-0">
         <div className="p-4 md:p-6 border-b border-border">
 <div className="mb-0 pb-0">
             <div className="flex items-center justify-between">
@@ -290,17 +299,6 @@ function HomeContent() {
         </Tabs>
       </div>
 
-      {/* Main Area - Header entfernt, SVG-Bereich vergrößert */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex-1 bg-background p-4 md:p-6 h-full">
-          <BikeVisualization
-            bikeA={bikeA}
-            bikeB={bikeB}
-            isPedaling={isPedaling}
-            setIsPedaling={setIsPedaling}
-          />
-        </div>
-      </div>
     </div>
   )
 }
