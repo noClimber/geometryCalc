@@ -735,404 +735,20 @@ const BikeVisualization = ({
             </Tooltip>
           </TooltipProvider>
         </div>
-        {/* Measurements Overlay - Collapsible */}
-        {measurementsExpanded && (
-          <div onWheel={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} className="relative mt-2 md:absolute md:top-[7.5rem] md:left-4 z-50 w-full md:w-80 max-h-[40vh] md:max-h-[70vh] md:resize-y md:min-h-[200px] overflow-y-auto shadow-sm md:shadow-xl border border-border bg-card rounded-lg flex-shrink-0">
-            {/* Sticky close button */}
-            <button
-              onClick={() => setMeasurementsExpanded(false)}
-              className="absolute top-2 right-2 z-50 bg-background/80 rounded-full p-1 leading-none text-sm hover:bg-muted transition-colors"
-              aria-label="Schließen"
-            >
-              ✕
-            </button>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-0">
-            <div className="p-4 border-b border-border">
-              <h3 className="text-sm font-semibold mb-2 pr-6">Biomechanik Check</h3>
-          <div className="text-xs text-muted-foreground">
-
-            {/* Überhöhung Ampel + Info */}
-            {geometryA?.saddleHandlebarDrop !== undefined && (() => {
-              const drop = geometryA.saddleHandlebarDrop;
-              const isRed = drop > SADDLE_HANDLEBAR_DROP_CRITICAL;
-              const isYellow = !isRed && drop > SADDLE_HANDLEBAR_DROP_WARNING;
-              let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
-              let ampelText = isRed
-                ? (<span><b>Überhöhung: {drop.toFixed(0)}mm</b> – Aggressive Position</span>)
-                : isYellow
-                  ? (<span><b>Überhöhung: {drop.toFixed(0)}mm</b> – Sportliche Position</span>)
-                  : (<span><b>Überhöhung: {drop.toFixed(0)}mm</b></span>);
-              let tooltipText = isRed
-                ? 'Sehr große Überhöhung: Aggressive Sitzposition, Nackenprobleme und Komforteinbußen möglich.'
-                : isYellow
-                  ? 'Erhöhte Überhöhung: Sportliche Sitzposition, Komfort leicht reduziert.'
-                  : 'Überhöhung im optimalen Bereich: Komfort und Effizienz sind gut ausbalanciert.';
-              return (
-                <div className="flex items-center w-full pr-2">
-                  <span
-                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: ampelColor }}
-                  />
-                  <span className="font-medium text-xs ml-2">{ampelText}</span>
-                  <span className="flex-1" />
-                  {(isRed || isYellow) && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-[200px]">{tooltipText}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Kniewinkel 90° Ampel + Info (nur wenn Fahrer sichtbar) */}
-            {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (
-              <div className="flex items-center w-full pr-2 mt-2">
-                <span
-                  className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                  style={{ backgroundColor:
-                    geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
-                      ? '#e74c3c'
-                      : (geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING
-                          ? '#f39c12'
-                          : '#22c55e')
-                  }}
-                />
-                <span className="font-medium text-xs ml-2">
-                  <b>Kniewinkel Unten (6 Uhr): </b>
-                  {`${geometryA.kneeAngleAt90.toFixed(1)}°`}
-                </span>
-                <span className="flex-1" />
-                {(geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX || geometryA.kneeAngleAt90 < KNEE_90_MIN_WARNING || geometryA.kneeAngleAt90 > KNEE_90_MAX_WARNING) && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-4 w-4 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-[200px]">
-                          {geometryA.kneeAngleAt90 <= KNEE_90_MIN || geometryA.kneeAngleAt90 >= KNEE_90_MAX
-                            ? 'Kniewinkel bei 90° ist außerhalb des empfohlenen Bereichs. Risiko für Über- oder Unterstreckung.'
-                            : 'Kniewinkel bei 90° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-            )}
-
-            {/* Kniewinkel 270° Ampel + Info */}
-            {riderVisible && geometryA?.kneeAngleAt270 !== undefined && (() => {
-              const angle = geometryA.kneeAngleAt270;
-              const isRed = angle <= KNEE_270_MIN;
-              const isYellow = !isRed && angle < KNEE_270_MIN_WARNING;
-              let ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
-              let ampelText = isRed
-                ? (<span><b>Kniewinkel Oben (12 Uhr): {angle.toFixed(1)}°</b> – Zu klein</span>)
-                : isYellow
-                  ? (<span><b>Kniewinkel Oben (12 Uhr): {angle.toFixed(1)}°</b> – Grenzwertig</span>)
-                  : (<span><b>Kniewinkel Oben (12 Uhr): {angle.toFixed(1)}°</b></span>);
-              let tooltipText = isRed
-                ? 'Kniewinkel bei Oben° ist zu klein. Risiko für Überstreckung des Knies.'
-                : isYellow
-                  ? 'Kniewinkel bei Oben° ist grenzwertig. Leichte Anpassungen könnten sinnvoll sein.'
-                  : 'Kniewinkel bei Oben° im optimalen Bereich.';
-              return (
-                <div className="flex items-center w-full pr-2 mt-2">
-                  <span
-                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: ampelColor }}
-                  />
-                  <span className="font-medium text-xs ml-2">{ampelText}</span>
-                  <span className="flex-1" />
-                  {(isRed || isYellow) && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-[200px]">{tooltipText}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* unrealistische Radgeometrie */}
-            {riderVisible && geometryA?.ankleAngleAt270 !== undefined && geometryA.ankleAngleAt270 < ANKLE_MIN && (
-              <div className="flex items-center w-full mt-2">
-                <span className="w-4 h-4 flex items-center justify-center rounded-full border border-border flex-shrink-0 bg-white" style={{ position: 'relative' }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="8" r="7" stroke="#e74c3c" strokeWidth="2" fill="#fff" />
-                    <rect x="3.5" y="7" width="9" height="2" rx="1" fill="#e74c3c" />
-                  </svg>
-                </span>
-                <span className="font-medium text-xs ml-2"><b>unrealistische Radgeometrie</b></span>
-                <span className="flex-1" />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-4 w-4 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-[200px]">Sprunggelenkwinkel bei 270° ist zu klein. Die Geometrie ist biomechanisch nicht realistisch umsetzbar.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            )}
-
-            {/* Sattel zu hoch / Bein zu kurz */}
-            {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
-              const angle = geometryA.kneeAngleAt90;
-              const isRed = angle >= 180;
-              if (!isRed) return null;
-              let ampelText = (<span><b>Sattel zu hoch / Bein zu kurz</b></span>);
-              let tooltipText = 'Das Bein ist zu kurz (kürzer als für Körpergrösse angegeben). Dadurch ist diese Position nicht realistisch umsetzbar. Der Sattel sollte abgesenkt oder die Beinlänge überprüft werden.';
-              return (
-                <div className="flex items-center w-full pr-2 mt-2">
-                  <span className="w-4 h-4 flex items-center justify-center rounded-full border border-border flex-shrink-0 bg-white" style={{ position: 'relative' }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="8" cy="8" r="7" stroke="#e74c3c" strokeWidth="2" fill="#fff" />
-                      <rect x="3.5" y="7" width="9" height="2" rx="1" fill="#e74c3c" />
-                    </svg>
-                  </span>
-                  <span className="font-medium text-xs ml-2">{ampelText}</span>
-                  <span className="flex-1" />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-4 w-4 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-[200px]">{tooltipText}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              );
-            })()}
-
-            {/* Knie lotet vor Pedalachse */}
-            {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && (() => {
-              const distance = geometryA.kneeTopedalXAt0;
-              const isYellow = distance < KNEE_PEDAL_X_MIN_WARNING;
-              if (!isYellow) return null;
-              let ampelColor = '#f39c12';
-              let ampelText = (<span><b>Knie lotet vor Pedalachse: {distance.toFixed(0)}mm</b> – Grenzwertig</span>);
-              let tooltipText = 'Knie zu Pedal Abstand ist grenzwertig gering. Risiko für ungünstige Kraftübertragung.';
-              return (
-                <div className="flex items-center w-full pr-2 mt-2">
-                  <span
-                    className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: ampelColor }}
-                  />
-                  <span className="font-medium text-xs ml-2">{ampelText}</span>
-                  <span className="flex-1" />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-4 w-4 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-[200px]">{tooltipText}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              );
-            })()}
-            </div>
-            </div>
-            <div className="p-4">
-              <h3 className="text-sm font-semibold mb-2">Bike Setup</h3>
-          <div className="space-y-1.5">
-            {/* Knee Angle Display */}
-            {riderVisible && geometryA?.kneeAngle !== undefined && (
-              <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
-                <span className="font-medium">Kniewinkel: </span>
-                <span className="text-primary font-bold">{geometryA.kneeAngle.toFixed(1)}°</span>
-              </div>
-            )}
-          
-          {/* Ankle Angle Display */}
-          {riderVisible && geometryA?.ankleAngle !== undefined && (
-            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
-              <span className="font-medium">Sprunggelenkwinkel: </span>
-              <span className="text-primary font-bold">{geometryA.ankleAngle.toFixed(1)}°</span>
-            </div>
-          )}
-          
-          {/* BB to Saddle Distance */}
-          {geometryA?.bbToSaddleDistance !== undefined && (
-            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
-              <span className="font-medium">Tretlager→Sattel: </span>
-              <span className="text-primary font-bold">{geometryA.bbToSaddleDistance.toFixed(1)} mm</span>
-            </div>
-          )}
-          
-          {/* BB to SeatPost Top Distance */}
-          {geometryA?.bbToSeatPostDistance !== undefined && (
-            <div className="px-2 py-1 bg-muted/50 rounded text-[10px]">
-              <span className="font-medium">Tretlager→SeatPost: </span>
-              <span className="text-primary font-bold">{geometryA.bbToSeatPostDistance.toFixed(1)} mm</span>
-            </div>
-          )}
-          
-          {/* Knee Angle at 90° */}
-          {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
-            const angle = geometryA.kneeAngleAt90
-            const isRed = angle <= KNEE_90_MIN || angle >= KNEE_90_MAX
-            const isYellow = !isRed && (angle < KNEE_90_MIN_WARNING || angle > KNEE_90_MAX_WARNING)
-            return (
-              <div 
-                className="px-2 py-1 rounded text-[10px]"
-                style={{
-                  backgroundColor: isRed 
-                    ? 'hsl(0 84% 60%)' 
-                    : isYellow 
-                      ? 'hsl(45 93% 47%)'
-                      : 'hsl(var(--muted) / 0.5)',
-                  color: isRed || isYellow ? 'white' : 'inherit'
-                }}
-              >
-                <span className="font-medium">@ 90°: </span>
-                <span className="font-bold">{angle.toFixed(1)}°</span>
-              </div>
-            )
-          })()}
-          
-          {/* Knee Angle at 270° */}
-          {riderVisible && geometryA?.kneeAngleAt270 !== undefined && (() => {
-            const angle = geometryA.kneeAngleAt270
-            const isRed = angle <= KNEE_270_MIN
-            const isYellow = !isRed && angle < KNEE_270_MIN_WARNING
-            return (
-              <div 
-                className="px-2 py-1 rounded text-[10px]"
-                style={{
-                  backgroundColor: isRed 
-                    ? 'hsl(0 84% 60%)' 
-                    : isYellow 
-                      ? 'hsl(45 93% 47%)'
-                      : 'hsl(var(--muted) / 0.5)',
-                  color: isRed || isYellow ? 'white' : 'inherit'
-                }}
-              >
-                <span className="font-medium">@ 270°: </span>
-                <span className="font-bold">{angle.toFixed(1)}°</span>
-              </div>
-            )
-          })()}
-          
-          {/* Saddle-Handlebar Drop (Überhöhung) */}
-          {geometryA?.saddleHandlebarDrop !== undefined && (() => {
-            const drop = geometryA.saddleHandlebarDrop
-            const isRed = drop > SADDLE_HANDLEBAR_DROP_CRITICAL
-            const isYellow = !isRed && drop > SADDLE_HANDLEBAR_DROP_WARNING
-            return (
-              <div 
-                className="px-2 py-1 rounded text-[10px]"
-                style={{
-                  backgroundColor: isRed 
-                    ? 'hsl(0 84% 60%)' 
-                    : isYellow 
-                      ? 'hsl(45 93% 47%)'
-                      : 'hsl(var(--muted) / 0.5)',
-                  color: isRed || isYellow ? 'white' : 'inherit'
-                }}
-              >
-                <span className="font-medium">Überhöhung: </span>
-                <span className="font-bold">{drop.toFixed(0)} mm</span>
-              </div>
-            )
-          })()}
-          
-          {/* Knee to Pedal X Distance at 0° */}
-            <div 
-              className="px-2 py-1 rounded text-[10px]"
-              style={{
-                backgroundColor: riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING
-                  ? 'hsl(45 93% 47%)'
-                  : 'hsl(var(--muted) / 0.5)',
-                color: riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING ? 'white' : 'inherit'
-              }}
-            >
-              <span className="font-medium">Knie→Pedal @ 0°: </span>
-              <span className="font-bold">
-                {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined
-                  ? `${geometryA.kneeTopedalXAt0.toFixed(0)} mm`
-                  : '–'}
-              </span>
-            </div>
-          
-          {/* Shoulder Angle */}
-            <div 
-              className="px-2 py-1 rounded text-[10px]"
-              style={{
-                backgroundColor: riderVisible && geometryA?.shoulderAngle !== undefined && (geometryA.shoulderAngle < SHOULDER_ANGLE_MIN || geometryA.shoulderAngle > SHOULDER_ANGLE_MAX)
-                  ? 'hsl(0 84% 60%)'
-                  : riderVisible && geometryA?.shoulderAngle !== undefined && ((geometryA.shoulderAngle >= SHOULDER_ANGLE_MIN && geometryA.shoulderAngle < SHOULDER_ANGLE_MIN_WARNING) || (geometryA.shoulderAngle > SHOULDER_ANGLE_MAX_WARNING && geometryA.shoulderAngle <= SHOULDER_ANGLE_MAX))
-                    ? 'hsl(45 93% 47%)'
-                    : 'hsl(var(--muted) / 0.5)',
-                color: riderVisible && geometryA?.shoulderAngle !== undefined && (geometryA.shoulderAngle < SHOULDER_ANGLE_MIN || geometryA.shoulderAngle > SHOULDER_ANGLE_MAX || (geometryA.shoulderAngle >= SHOULDER_ANGLE_MIN && geometryA.shoulderAngle < SHOULDER_ANGLE_MIN_WARNING) || (geometryA.shoulderAngle > SHOULDER_ANGLE_MAX_WARNING && geometryA.shoulderAngle <= SHOULDER_ANGLE_MAX)) ? 'white' : 'inherit'
-              }}
-            >
-              <span className="font-medium">Schulterwinkel: </span>
-              <span className="font-bold">
-                {riderVisible && geometryA?.shoulderAngle !== undefined
-                  ? `${geometryA.shoulderAngle.toFixed(1)}°`
-                  : '–'}
-              </span>
-            </div>
-          
-          {/* Elbow Angle */}
-            <div 
-              className="px-2 py-1 rounded text-[10px]"
-              style={{
-                backgroundColor: riderVisible && geometryA?.elbowAngle !== undefined && geometryA.elbowAngle > ELBOW_ANGLE_CRITICAL
-                  ? 'hsl(0 84% 60%)'
-                  : riderVisible && geometryA?.elbowAngle !== undefined && ((geometryA.elbowAngle >= ELBOW_ANGLE_MAX_WARNING && geometryA.elbowAngle <= ELBOW_ANGLE_CRITICAL) || geometryA.elbowAngle < ELBOW_ANGLE_MIN_WARNING)
-                    ? 'hsl(45 93% 47%)'
-                    : 'hsl(var(--muted) / 0.5)',
-                color: riderVisible && geometryA?.elbowAngle !== undefined && (geometryA.elbowAngle > ELBOW_ANGLE_CRITICAL || (geometryA.elbowAngle >= ELBOW_ANGLE_MAX_WARNING && geometryA.elbowAngle <= ELBOW_ANGLE_CRITICAL) || geometryA.elbowAngle < ELBOW_ANGLE_MIN_WARNING) ? 'white' : 'inherit'
-              }}
-            >
-              <span className="font-medium">Ellbogenwinkel: </span>
-              <span className="font-bold">
-                {riderVisible && geometryA?.elbowAngle !== undefined
-                  ? `${geometryA.elbowAngle.toFixed(1)}°`
-                  : '–'}
-              </span>
-            </div>
-            </div>
-            </div>
-          </div>
-          </div>
-        )}
         </div>
       </Card>
 
-      {/* Control Panel - below SVG on mobile, overlay on desktop */}
-      <div className="flex flex-col gap-2 relative md:absolute md:top-4 md:left-4 z-40 p-3 md:p-0 w-full md:w-auto bg-card md:bg-transparent md:backdrop-blur-none border-t md:border-none border-border">
-        <div className="flex flex-row md:flex-col items-center md:items-stretch justify-center md:justify-start gap-2 flex-wrap md:bg-background/90 md:backdrop-blur-md md:border md:border-border md:rounded-xl md:p-2 md:shadow-lg">
-          
-          <div className="font-bold text-xs uppercase tracking-wider hidden md:block text-center text-muted-foreground mb-1">
+      {/* --- UI OVERLAYS (Controls & Measurements) --- */}
+      <div className="flex flex-col gap-2 relative md:absolute md:top-4 md:left-4 z-40 p-3 md:p-0 w-full md:w-auto">
+        
+        {/* Control Panel */}
+        <div className="bg-card md:bg-background/90 md:backdrop-blur-md md:border border-border md:rounded-xl md:p-2 md:shadow-lg w-full md:w-[160px] flex-shrink-0">
+          <div className="font-bold text-xs uppercase tracking-wider hidden md:block text-center text-muted-foreground mb-2">
             Steuerung
           </div>
           
           {/* Action Buttons */}
-          <div className="flex flex-row md:flex-col gap-2">
+          <div className="flex flex-row md:flex-col gap-2 flex-wrap justify-center">
             <button onClick={() => { setMeasureMode(!measureMode); setMeasurePoints([]); }} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-sm ${measureMode ? 'bg-[#f39c12] text-white' : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'}`}>
               {measureMode ? '📏 Aktiv' : '📏 Messen'}
             </button>
@@ -1149,23 +765,166 @@ const BikeVisualization = ({
 
           {/* Bike Info Legend */}
           {(bikeA || bikeB) && (
-            <div className="flex flex-row md:flex-col gap-3 md:gap-1.5 mt-1 md:mt-2 md:pt-3 md:border-t border-border">
+            <div className="flex flex-row md:flex-col gap-3 md:gap-2 mt-2 md:mt-3 md:pt-3 md:border-t border-border justify-center">
               {bikeA && (
-                <div className="flex items-center gap-2 bg-background md:bg-transparent px-2 py-1 md:p-0 rounded-md border md:border-none border-border">
+                <div className="flex items-center gap-2 px-2 py-1 md:p-0 rounded-md border md:border-none border-border">
                   <div className="w-3 h-3 rounded-full bg-[#e74c3c] shadow-sm flex-shrink-0" />
                   <span className="font-semibold text-[11px] truncate max-w-[120px]">{bikeA.brand === '__custom__' ? bikeA.model : `${bikeA.brand} ${bikeA.model}`}</span>
                 </div>
               )}
               {bikeB && (
-                <div className="flex items-center gap-2 bg-background md:bg-transparent px-2 py-1 md:p-0 rounded-md border md:border-none border-border">
+                <div className="flex items-center gap-2 px-2 py-1 md:p-0 rounded-md border md:border-none border-border">
                   <div className="w-3 h-3 rounded-full bg-[#3498db] shadow-sm flex-shrink-0" />
                   <span className="font-semibold text-[11px] truncate max-w-[120px]">{bikeB.brand === '__custom__' ? bikeB.model : `${bikeB.brand} ${bikeB.model}`}</span>
                 </div>
               )}
             </div>
           )}
-
         </div>
+
+        {/* Measurements Overlay */}
+        {measurementsExpanded && (
+          <div
+            onWheel={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="w-full md:w-80 shadow-sm md:shadow-xl border border-border bg-card rounded-lg flex flex-col md:resize-y overflow-hidden"
+            style={{ minHeight: '300px', maxHeight: '70vh' }}
+          >
+            {/* Header with close button */}
+            <div className="flex justify-between items-center p-3 border-b border-border bg-muted/20 flex-shrink-0">
+              <h3 className="text-sm font-semibold m-0">Biomechanik Check</h3>
+              <button
+                onClick={() => setMeasurementsExpanded(false)}
+                className="bg-background/80 rounded-full p-1.5 leading-none text-xs hover:bg-muted transition-colors border border-border"
+                aria-label="Schließen"
+              >✕</button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 pb-8">
+              <div className="space-y-4">
+
+                {/* Ampeln / Warnungen */}
+                <div className="space-y-2 text-xs text-muted-foreground">
+                {geometryA?.saddleHandlebarDrop !== undefined && (() => {
+                  const drop = geometryA.saddleHandlebarDrop;
+                  const isRed = drop > SADDLE_HANDLEBAR_DROP_CRITICAL;
+                  const isYellow = !isRed && drop > SADDLE_HANDLEBAR_DROP_WARNING;
+                  const ampelColor = isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e';
+                  const label = isRed ? 'Aggressive Position' : isYellow ? 'Sportliche Position' : 'Gut';
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: ampelColor }} />
+                      <span className="font-medium">Überhöhung: {drop.toFixed(0)}mm</span>
+                      <span className="text-muted-foreground/70">({label})</span>
+                    </div>
+                  );
+                })()}
+
+                {riderVisible && geometryA?.kneeAngleAt90 !== undefined && (() => {
+                  const a = geometryA.kneeAngleAt90;
+                  const isRed = a <= KNEE_90_MIN || a >= KNEE_90_MAX;
+                  const isYellow = !isRed && (a < KNEE_90_MIN_WARNING || a > KNEE_90_MAX_WARNING);
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e' }} />
+                      <span className="font-medium">Knie 6 Uhr: {a.toFixed(1)}°</span>
+                    </div>
+                  );
+                })()}
+
+                {riderVisible && geometryA?.kneeAngleAt270 !== undefined && (() => {
+                  const a = geometryA.kneeAngleAt270;
+                  const isRed = a <= KNEE_270_MIN;
+                  const isYellow = !isRed && a < KNEE_270_MIN_WARNING;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: isRed ? '#e74c3c' : isYellow ? '#f39c12' : '#22c55e' }} />
+                      <span className="font-medium">Knie 12 Uhr: {a.toFixed(1)}°</span>
+                    </div>
+                  );
+                })()}
+
+                {riderVisible && geometryA?.ankleAngleAt270 !== undefined && geometryA.ankleAngleAt270 < ANKLE_MIN && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full flex-shrink-0 bg-[#e74c3c]" />
+                    <span className="font-medium">Unrealistische Geometrie</span>
+                  </div>
+                )}
+
+                {riderVisible && geometryA?.kneeAngleAt90 !== undefined && geometryA.kneeAngleAt90 >= 180 && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full flex-shrink-0 bg-[#e74c3c]" />
+                    <span className="font-medium">Sattel zu hoch / Bein zu kurz</span>
+                  </div>
+                )}
+
+                {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full flex-shrink-0 bg-[#f39c12]" />
+                    <span className="font-medium">Knie vor Pedalachse: {geometryA.kneeTopedalXAt0.toFixed(0)}mm</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Geometrie Details */}
+              <div>
+                <h4 className="text-xs font-semibold mb-2 mt-2 text-muted-foreground uppercase">Geometrie Details</h4>
+                <div className="space-y-1.5">
+                  {riderVisible && geometryA?.kneeAngle !== undefined && (
+                    <div className="px-2 py-1.5 bg-muted/30 rounded text-[11px] flex justify-between">
+                      <span className="font-medium">Kniewinkel:</span><span className="text-primary font-bold">{geometryA.kneeAngle.toFixed(1)}°</span>
+                    </div>
+                  )}
+                  {riderVisible && geometryA?.ankleAngle !== undefined && (
+                    <div className="px-2 py-1.5 bg-muted/30 rounded text-[11px] flex justify-between">
+                      <span className="font-medium">Sprunggelenk:</span><span className="text-primary font-bold">{geometryA.ankleAngle.toFixed(1)}°</span>
+                    </div>
+                  )}
+                  {geometryA?.bbToSaddleDistance !== undefined && (
+                    <div className="px-2 py-1.5 bg-muted/30 rounded text-[11px] flex justify-between">
+                      <span className="font-medium">TL→Sattel:</span><span className="text-primary font-bold">{geometryA.bbToSaddleDistance.toFixed(1)} mm</span>
+                    </div>
+                  )}
+                  {geometryA?.bbToSeatPostDistance !== undefined && (
+                    <div className="px-2 py-1.5 bg-muted/30 rounded text-[11px] flex justify-between">
+                      <span className="font-medium">TL→SeatPost:</span><span className="text-primary font-bold">{geometryA.bbToSeatPostDistance.toFixed(1)} mm</span>
+                    </div>
+                  )}
+                  {riderVisible && geometryA?.shoulderAngle !== undefined && (() => {
+                    const a = geometryA.shoulderAngle;
+                    const isRed = a < SHOULDER_ANGLE_MIN || a > SHOULDER_ANGLE_MAX;
+                    const isYellow = !isRed && ((a >= SHOULDER_ANGLE_MIN && a < SHOULDER_ANGLE_MIN_WARNING) || (a > SHOULDER_ANGLE_MAX_WARNING && a <= SHOULDER_ANGLE_MAX));
+                    return (
+                      <div className="px-2 py-1.5 rounded text-[11px] flex justify-between" style={{ backgroundColor: isRed ? 'hsl(0 84% 60%)' : isYellow ? 'hsl(45 93% 47%)' : 'hsl(var(--muted) / 0.3)', color: (isRed || isYellow) ? 'white' : 'inherit' }}>
+                        <span className="font-medium">Schulterwinkel:</span><span className="font-bold">{a.toFixed(1)}°</span>
+                      </div>
+                    );
+                  })()}
+                  {riderVisible && geometryA?.elbowAngle !== undefined && (() => {
+                    const a = geometryA.elbowAngle;
+                    const isRed = a > ELBOW_ANGLE_CRITICAL;
+                    const isYellow = !isRed && ((a >= ELBOW_ANGLE_MAX_WARNING && a <= ELBOW_ANGLE_CRITICAL) || a < ELBOW_ANGLE_MIN_WARNING);
+                    return (
+                      <div className="px-2 py-1.5 rounded text-[11px] flex justify-between" style={{ backgroundColor: isRed ? 'hsl(0 84% 60%)' : isYellow ? 'hsl(45 93% 47%)' : 'hsl(var(--muted) / 0.3)', color: (isRed || isYellow) ? 'white' : 'inherit' }}>
+                        <span className="font-medium">Ellbogenwinkel:</span><span className="font-bold">{a.toFixed(1)}°</span>
+                      </div>
+                    );
+                  })()}
+                  {riderVisible && geometryA?.kneeTopedalXAt0 !== undefined && (
+                    <div className="px-2 py-1.5 rounded text-[11px] flex justify-between" style={{ backgroundColor: geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING ? 'hsl(45 93% 47%)' : 'hsl(var(--muted) / 0.3)', color: geometryA.kneeTopedalXAt0 < KNEE_PEDAL_X_MIN_WARNING ? 'white' : 'inherit' }}>
+                      <span className="font-medium">Knie→Pedal:</span><span className="font-bold">{geometryA.kneeTopedalXAt0.toFixed(0)} mm</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        )}
+
       </div>
     </div>
   )
