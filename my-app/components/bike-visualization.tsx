@@ -545,11 +545,11 @@ const BikeVisualization = ({
   }
 
     return (
-    <div className="relative h-full flex flex-col overflow-hidden">
+    <div className="relative h-full flex flex-col landscape:flex-row lg:flex-col overflow-hidden bg-background">
 
       {/* --- UI OVERLAYS (Controls & Measurements) --- */}
-      {/* Mobile: normal flow above SVG | Desktop: absolute overlay top-left */}
-      <div className="md:absolute md:top-4 md:left-4 md:bottom-4 md:right-auto z-40 md:pointer-events-none flex flex-col gap-2 flex-none">
+      {/* Portrait: flow above SVG | Landscape: static left sidebar w-1/4 | Desktop (lg): absolute overlay */}
+      <div className="flex flex-col gap-2 flex-none p-2 md:p-0 md:absolute md:top-4 md:left-4 md:bottom-4 md:right-auto z-40 md:pointer-events-none landscape:static landscape:w-1/4 landscape:h-full landscape:overflow-y-auto landscape:border-r landscape:border-border landscape:pointer-events-auto lg:absolute lg:top-4 lg:left-4 lg:bottom-4 lg:w-auto lg:pointer-events-none">
         
         {/* Control Panel */}
         <div className="pointer-events-auto bg-card/95 md:bg-background/90 backdrop-blur-md border border-border rounded-xl p-2 shadow-lg w-full md:w-[160px] flex-none">
@@ -598,7 +598,7 @@ const BikeVisualization = ({
             onWheel={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
-            className="pointer-events-auto w-full md:w-80 shadow-2xl border border-border bg-card rounded-lg flex flex-col h-[280px] md:flex-1 md:h-auto md:min-h-0"
+            className="pointer-events-auto w-full md:w-80 shadow-2xl border border-border bg-card rounded-lg flex flex-col h-[280px] landscape:h-[180px] landscape:shadow-none landscape:border-none lg:shadow-2xl lg:border lg:border-border lg:h-auto lg:min-h-0 flex-1"
           >
             {/* Header with close button */}
             <div className="flex justify-between items-center p-3 border-b border-border bg-muted/20 flex-none">
