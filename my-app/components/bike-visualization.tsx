@@ -545,7 +545,7 @@ const BikeVisualization = ({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="relative h-full flex flex-col overflow-hidden">
       {/* SVG Area */}
       <Card 
         className="bg-card p-6 overflow-hidden transition-all duration-300 ease-in-out"
@@ -711,82 +711,9 @@ const BikeVisualization = ({
           </g>
         </svg>
 
-        {/* Control Buttons */}
-        <div
-          className="absolute bg-card/90 backdrop-blur-sm border border-border rounded-lg p-1 max-w-xs w-[150px] gap-1 flex flex-col items-stretch z-10 text-xs"
-          style={{
-            top: 8,
-            left: 8
-          }}
-        >
-          <div className="font-bold text-sm mb-1 text-center">Steuerung</div>
-          {/* Measure Mode Toggle */}
-          <button
-            onClick={() => {
-              setMeasureMode(!measureMode)
-              setMeasurePoints([])
-            }}
-            className={`w-32 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              measureMode
-                ? 'bg-[#f39c12] text-white'
-                : 'bg-muted hover:bg-muted/80'
-            }`}
-          >
-            {measureMode ? '📏 Aktiv' : '📏 Messen'}
-          </button>
-          {/* Rider Visibility Toggle */}
-          <button
-            onClick={() => setRiderVisible(!riderVisible)}
-            className={`w-32 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              riderVisible
-                ? 'bg-[#22c55e] text-white'
-                : 'bg-muted hover:bg-muted/80'
-            }`}
-          >
-            {riderVisible ? '🚴 Fahrer An' : '🚴 Fahrer Aus'}
-          </button>
-          {/* Animation Toggle Button */}
-          <button
-            onClick={() => setIsPedaling(!isPedaling)}
-            className={`w-32 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              isPedaling
-                ? 'bg-[#22c55e] text-white'
-                : 'bg-muted hover:bg-muted/80'
-            }`}
-          >
-            {isPedaling ? 'Animation An' : 'Animation Aus'}
-          </button>
-          {/* Toggle Measurements */}
-          <button
-            onClick={() => setMeasurementsExpanded(!measurementsExpanded)}
-            className="w-32 px-2 py-1 rounded text-xs font-medium transition-colors bg-muted hover:bg-muted/80"
-          >
-            {measurementsExpanded ? '▼ Einklappen' : '▲ Messungen'}
-          </button>
-          {/* Bike Info */}
-          {bikeA && (
-            <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
-              <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
-              <span className="font-medium text-[10px]">
-                {bikeA.brand === '__custom__'
-                  ? `${bikeA.model}`
-                  : `${bikeA.brand} ${bikeA.model} (${bikeA.size})`}
-              </span>
-            </div>
-          )}
-          {bikeB && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-[#3498db]" />
-              <span className="font-medium text-[10px]">
-                {bikeB.brand === '__custom__'
-                  ? `${bikeB.model}`
-                  : `${bikeB.brand} ${bikeB.model} (${bikeB.size})`}
-              </span>
-            </div>
-          )}
-        </div>
+
         {/* Zoom Controls */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
+        <div className="absolute top-2 right-2 flex flex-col gap-2 z-50">
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -808,20 +735,20 @@ const BikeVisualization = ({
             </Tooltip>
           </TooltipProvider>
         </div>
-        </div>
-      </Card>
-
-      {/* Measurements Section - Collapsible */}
-      <div 
-        className="grid grid-cols-2 gap-4 mt-4 transition-all duration-300 ease-in-out overflow-hidden"
-        style={{
-          maxHeight: measurementsExpanded ? '30vh' : '0',
-          opacity: measurementsExpanded ? 1 : 0,
-          marginTop: measurementsExpanded ? '1rem' : '0',
-        }}
-      >
-        <Card className="p-4 overflow-y-auto max-h-96">
-          <h3 className="text-sm font-semibold mb-2">Biomechanik Check</h3>
+        {/* Measurements Overlay - Collapsible */}
+        {measurementsExpanded && (
+          <div onWheel={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} className="absolute bottom-2 left-2 right-2 md:right-auto md:w-80 z-50 max-h-[40vh] overflow-y-auto shadow-xl border border-border bg-card rounded-lg">
+            {/* Sticky close button */}
+            <button
+              onClick={() => setMeasurementsExpanded(false)}
+              className="absolute top-2 right-2 z-50 bg-background/80 rounded-full p-1 leading-none text-sm hover:bg-muted transition-colors"
+              aria-label="Schließen"
+            >
+              ✕
+            </button>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-0">
+            <div className="p-4 border-b border-border">
+              <h3 className="text-sm font-semibold mb-2 pr-6">Biomechanik Check</h3>
           <div className="text-xs text-muted-foreground">
 
             {/* Überhöhung Ampel + Info */}
@@ -1025,12 +952,10 @@ const BikeVisualization = ({
                 </div>
               );
             })()}
-          </div>
-        </Card>
-
-        {/* Right: Measurements */}
-        <Card className="p-4 overflow-y-auto max-h-96">
-          <h3 className="text-sm font-semibold mb-2">Bike Setup</h3>
+            </div>
+            </div>
+            <div className="p-4">
+              <h3 className="text-sm font-semibold mb-2">Bike Setup</h3>
           <div className="space-y-1.5">
             {/* Knee Angle Display */}
             {riderVisible && geometryA?.kneeAngle !== undefined && (
@@ -1190,8 +1115,57 @@ const BikeVisualization = ({
                   : '–'}
               </span>
             </div>
+            </div>
+            </div>
           </div>
-        </Card>
+          </div>
+        )}
+        </div>
+      </Card>
+
+      {/* Control Panel - below SVG on mobile, overlay on desktop */}
+      <div className="flex flex-col gap-2 relative md:absolute md:top-4 md:left-4 z-40 p-3 md:p-0 w-full md:w-auto bg-card md:bg-transparent md:backdrop-blur-none border-t md:border-none border-border">
+        <div className="flex flex-row md:flex-col items-center md:items-stretch justify-center md:justify-start gap-2 flex-wrap md:bg-background/90 md:backdrop-blur-md md:border md:border-border md:rounded-xl md:p-2 md:shadow-lg">
+          
+          <div className="font-bold text-xs uppercase tracking-wider hidden md:block text-center text-muted-foreground mb-1">
+            Steuerung
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-row md:flex-col gap-2">
+            <button onClick={() => { setMeasureMode(!measureMode); setMeasurePoints([]); }} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-sm ${measureMode ? 'bg-[#f39c12] text-white' : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'}`}>
+              {measureMode ? '📏 Aktiv' : '📏 Messen'}
+            </button>
+            <button onClick={() => setRiderVisible(!riderVisible)} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-sm ${riderVisible ? 'bg-[#22c55e] text-white' : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'}`}>
+              {riderVisible ? '🚴 Fahrer An' : '🚴 Fahrer Aus'}
+            </button>
+            <button onClick={() => setIsPedaling(!isPedaling)} className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-sm ${isPedaling ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'}`}>
+              {isPedaling ? '↻ Animiert' : '↻ Statisch'}
+            </button>
+            <button onClick={() => setMeasurementsExpanded(!measurementsExpanded)} className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-sm bg-secondary hover:bg-secondary/80 text-secondary-foreground">
+              {measurementsExpanded ? '▼ Werte zu' : '▲ Werte auf'}
+            </button>
+          </div>
+
+          {/* Bike Info Legend */}
+          {(bikeA || bikeB) && (
+            <div className="flex flex-row md:flex-col gap-3 md:gap-1.5 mt-1 md:mt-2 md:pt-3 md:border-t border-border">
+              {bikeA && (
+                <div className="flex items-center gap-2 bg-background md:bg-transparent px-2 py-1 md:p-0 rounded-md border md:border-none border-border">
+                  <div className="w-3 h-3 rounded-full bg-[#e74c3c] shadow-sm flex-shrink-0" />
+                  <span className="font-semibold text-[11px] truncate max-w-[120px]">{bikeA.brand === '__custom__' ? bikeA.model : `${bikeA.brand} ${bikeA.model}`}</span>
+                </div>
+              )}
+              {bikeB && (
+                <div className="flex items-center gap-2 bg-background md:bg-transparent px-2 py-1 md:p-0 rounded-md border md:border-none border-border">
+                  <div className="w-3 h-3 rounded-full bg-[#3498db] shadow-sm flex-shrink-0" />
+                  <span className="font-semibold text-[11px] truncate max-w-[120px]">{bikeB.brand === '__custom__' ? bikeB.model : `${bikeB.brand} ${bikeB.model}`}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   )
