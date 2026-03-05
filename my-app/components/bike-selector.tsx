@@ -98,6 +98,22 @@ const GeoRow = ({ label, value, unit = "mm", tooltip }: { label: string, value: 
   </div>
 )
 
+const DEFAULT_GEOMETRY: BikeGeometry = {
+  stack: 570,
+  reach: 390,
+  headTubeAngle: 73,
+  seatTubeAngle: 73.5,
+  wheelbase: 990,
+  standoverHeight: 770,
+  forkOffset: 50,
+  forkLength: 395,
+  bbDrop: 68,
+  headTubeLength: 140,
+  seatTubeLength: 530,
+  chainstayLength: 410,
+  frontCenter: 590,
+}
+
 type BikeSelectorProps = {
   bike: BikeData | null
   setBike: (bike: BikeData | null) => void
@@ -117,10 +133,17 @@ export function BikeSelector({
 }: BikeSelectorProps) {
   
 const [geoOpen, setGeoOpen] = useState(false)
+  const [customName, setCustomName] = useState('Mein Bike')
+  const [customGeo, setCustomGeo] = useState<BikeGeometry>({ ...DEFAULT_GEOMETRY })
 
-  // ... (Handler bleiben exakt gleich wie in deinem Code) ...
   const handleBrandChange = (brand: string) => {
     if (brand === 'none') { setBike(null); return }
+    if (brand === '__custom__') {
+      setCustomName('Mein Bike')
+      setGeoOpen(true)
+      setBike({ brand: '__custom__', model: 'Mein Bike', size: 'custom', geometry: { ...DEFAULT_GEOMETRY }, cockpit: clampCockpitSetup({ ...DEFAULT_COCKPIT }), rider: { ...DEFAULT_RIDER } })
+      return
+    }
     const models = Object.keys(availableBikes[brand] ?? {}); const firstModel = models[0]
     const sizes = firstModel ? Object.keys(availableBikes[brand][firstModel] ?? {}) : []; const firstSize = sizes[0]
     if (!firstModel || !firstSize) return
@@ -148,10 +171,23 @@ const [geoOpen, setGeoOpen] = useState(false)
   const handleHandPositionChange = (position: 'hoods' | 'drops') => { /* ... wie vorher ... */ 
       if (!bike) return; setBike({ ...bike, cockpit: { ...bike.cockpit, handPosition: position } })
   }
+  const handleCustomGeoChange = (field: keyof BikeGeometry, value: number) => {
+    const updated = { ...customGeo, [field]: value }
+    setCustomGeo(updated)
+    if (bike?.brand === '__custom__') {
+      setBike({ ...bike, geometry: updated })
+    }
+  }
+  const handleCustomNameChange = (name: string) => {
+    setCustomName(name)
+    if (bike?.brand === '__custom__') {
+      setBike({ ...bike, model: name })
+    }
+  }
 
   const brands = Object.keys(availableBikes)
-  const models = bike ? Object.keys(availableBikes[bike.brand]) : []
-  const sizes = bike ? Object.keys(availableBikes[bike.brand][bike.model]) : []
+  const models = bike && bike.brand !== '__custom__' ? Object.keys(availableBikes[bike.brand] ?? {}) : []
+  const sizes = bike && bike.brand !== '__custom__' ? Object.keys(availableBikes[bike.brand]?.[bike.model] ?? {}) : []
 
   return (
     <div className="p-6">
@@ -166,6 +202,7 @@ const [geoOpen, setGeoOpen] = useState(false)
                 <SelectValue placeholder="Marke wählen" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__custom__">✏️ Eigene Geometrie</SelectItem>
                 {allowClear && <SelectItem value="none">Kein Bike</SelectItem>}
                 {brands.map((brand) => (
                   <SelectItem key={brand} value={brand}>{brand}</SelectItem>
@@ -174,30 +211,44 @@ const [geoOpen, setGeoOpen] = useState(false)
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {bike?.brand === '__custom__' ? (
             <div className="space-y-2">
-              <Label htmlFor={`${bikeName}-model`} className={`text-sm font-semibold ${!bike ? 'opacity-50' : ''}`}>Modell</Label>
-              <Select value={bike?.model || ''} onValueChange={handleModelChange} disabled={!bike}>
-                <SelectTrigger id={`${bikeName}-model`} className="h-9">
-                  <SelectValue placeholder="Modell" />
-                </SelectTrigger>
-                <SelectContent>
-                  {models.map((model) => (<SelectItem key={model} value={model}>{model}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor={`${bikeName}-custom-name`} className="text-sm font-semibold">Bike Name</Label>
+              <Input
+                id={`${bikeName}-custom-name`}
+                type="text"
+                value={customName}
+                onChange={(e) => handleCustomNameChange(e.target.value)}
+                className="h-9 text-sm"
+                placeholder="z.B. Mein Traumrad"
+              />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${bikeName}-size`} className={`text-sm font-semibold ${!bike ? 'opacity-50' : ''}`}>Größe</Label>
-              <Select value={bike?.size || ''} onValueChange={handleSizeChange} disabled={!bike}>
-                <SelectTrigger id={`${bikeName}-size`} className="h-9">
-                  <SelectValue placeholder="Größe" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sizes.map((size) => (<SelectItem key={size} value={size}>{size}</SelectItem>))}
-                </SelectContent>
-              </Select>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor={`${bikeName}-model`} className={`text-sm font-semibold ${!bike ? 'opacity-50' : ''}`}>Modell</Label>
+                <Select value={bike?.model || ''} onValueChange={handleModelChange} disabled={!bike}>
+                  <SelectTrigger id={`${bikeName}-model`} className="h-9">
+                    <SelectValue placeholder="Modell" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.map((model) => (<SelectItem key={model} value={model}>{model}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`${bikeName}-size`} className={`text-sm font-semibold ${!bike ? 'opacity-50' : ''}`}>Größe</Label>
+                <Select value={bike?.size || ''} onValueChange={handleSizeChange} disabled={!bike}>
+                  <SelectTrigger id={`${bikeName}-size`} className="h-9">
+                    <SelectValue placeholder="Größe" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sizes.map((size) => (<SelectItem key={size} value={size}>{size}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {bike && (
@@ -214,9 +265,8 @@ const [geoOpen, setGeoOpen] = useState(false)
               >
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
                   Geometrie Basis
-                  {/* Kleines Badge wie viele Werte da sind */}
                   <span className="bg-muted text-[10px] px-1.5 py-0.5 rounded-full font-normal text-muted-foreground">
-                    Herstellerangaben
+                    {bike.brand === '__custom__' ? 'Eigene Eingabe' : 'Herstellerangaben'}
                   </span>
                 </h3>
                 {/* Chevron Icon dreht sich */}
@@ -226,86 +276,117 @@ const [geoOpen, setGeoOpen] = useState(false)
               {/* Inhalt (Animation via CSS Klasse oder einfach konditional) */}
               {geoOpen && (
                 <div className="space-y-2 p-3 bg-muted/30 rounded-md border border-border/50 animate-in slide-in-from-top-2 duration-200">
-                  {/* Jetzt EINSPALTIG: space-y-1 statt grid */}
-                                    <div className="space-y-1">
-                    <GeoRow 
-                      label="Stack" 
-                      value={bike.geometry.stack} 
-                      tooltip="Vertikaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein hoher Wert bedeutet eine aufrechte, komfortable Position." 
-                    />
-                    <GeoRow 
-                      label="Reach" 
-                      value={bike.geometry.reach} 
-                      tooltip="Horizontaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein langer Reach bedeutet eine gestreckte, sportliche Haltung." 
-                    />
-                    
-                    <div className="h-px bg-border/40 my-2" /> 
-                    
-                    <GeoRow 
-                      label="Lenkwinkel" 
-                      value={bike.geometry.headTubeAngle} 
-                      unit="°" 
-                      tooltip="Der Winkel der Gabel zum Boden. Flacher (<72°) sorgt für Laufruhe, steiler (>73°) für agiles, direktes Lenkverhalten." 
-                    />
-                    <GeoRow 
-                      label="Sitzwinkel" 
-                      value={bike.geometry.seatTubeAngle} 
-                      unit="°" 
-                      tooltip="Winkel des Sitzrohrs. Steiler (>74°) bringt dich weiter nach vorne über das Tretlager (gut für Aerodynamik/Kraft)." 
-                    />
-                    
-                    <div className="h-px bg-border/40 my-2" />
-                    
-                    <GeoRow 
-                      label="Radstand" 
-                      value={bike.geometry.wheelbase} 
-                      tooltip="Abstand zwischen den Radachsen. Ein langer Radstand erhöht die Stabilität bei hohem Tempo, ein kurzer macht das Rad wendiger." 
-                    />
-                    <GeoRow 
-                      label="Überstand" 
-                      value={bike.geometry.standoverHeight} 
-                      tooltip="Abstand vom Boden zur Oberrohrmitte. Wichtig, um beim Anhalten sicher über dem Rahmen stehen zu können." 
-                    />
-                    
-                    <div className="h-px bg-border/40 my-2" />
-
-                    <GeoRow 
-                      label="Gabel-Offset" 
-                      value={bike.geometry.forkOffset} 
-                      tooltip="Auch 'Rake' genannt. Die Vorbiegung der Gabel. Beeinflusst zusammen mit dem Lenkwinkel den Nachlauf und damit die Lenkstabilität." 
-                    />
-                    <GeoRow 
-                      label="Gabel-Länge" 
-                      value={bike.geometry.forkLength} 
-                      tooltip="Einbaulänge der Gabel von Achse bis Gabelkonus. Beeinflusst die Front-Höhe." 
-                    />
-                    <GeoRow 
-                      label="BB Drop" 
-                      value={bike.geometry.bbDrop} 
-                      tooltip="Tretlagerabsenkung gegenüber den Radachsen. Mehr Drop = tieferer Schwerpunkt und stabileres Kurvenverhalten." 
-                    />
-                    <GeoRow 
-                      label="Steuerrohr" 
-                      value={bike.geometry.headTubeLength} 
-                      tooltip="Länge des Steuerrohrs. Ein langes Steuerrohr hebt den Lenker an (höherer Stack) und reduziert meist die Notwendigkeit von Spacern." 
-                    />
-                    <GeoRow 
-                      label="Sitzrohr" 
-                      value={bike.geometry.seatTubeLength} 
-                      tooltip="Länge des Sitzrohrs vom Tretlager bis zur Oberkante. Bestimmt oft die Rahmengröße und wie weit die Sattelstütze herausragt." 
-                    />
-                    <GeoRow 
-                      label="Kettenstrebe" 
-                      value={bike.geometry.chainstayLength} 
-                      tooltip="Länge der hinteren Streben. Kurze Streben (<410mm) machen das Rad agil und reaktiv beim Antritt, lange sorgen für Laufruhe." 
-                    />
-                    <GeoRow 
-                      label="Front Center" 
-                      value={bike.geometry.frontCenter} 
-                      tooltip="Abstand Tretlager zur Vorderradachse. Wichtig um zu prüfen, ob die Fußspitze das Vorderrad berühren kann (Toe Overlap)." 
-                    />
-                  </div>
-
+                  {bike.brand === '__custom__' ? (
+                    /* --- EDITIERBARE EINGABEN für eigene Geometrie --- */
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hauptmaße</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SetupInput id={`${bikeName}-geo-stack`} label="Stack" suffix="mm" value={customGeo.stack} onChange={(v) => handleCustomGeoChange('stack', v)} tooltip="Vertikaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein hoher Wert bedeutet eine aufrechte, komfortable Position." />
+                        <SetupInput id={`${bikeName}-geo-reach`} label="Reach" suffix="mm" value={customGeo.reach} onChange={(v) => handleCustomGeoChange('reach', v)} tooltip="Horizontaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein langer Reach bedeutet eine gestreckte, sportliche Haltung." />
+                      </div>
+                      <div className="h-px bg-border/40" />
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Winkel</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SetupInput id={`${bikeName}-geo-hta`} label="Lenkwinkel" suffix="°" step={0.1} value={customGeo.headTubeAngle} onChange={(v) => handleCustomGeoChange('headTubeAngle', v)} tooltip="Der Winkel der Gabel zum Boden. Flacher (<72°) sorgt für Laufruhe, steiler (>73°) für agiles, direktes Lenkverhalten." />
+                        <SetupInput id={`${bikeName}-geo-sta`} label="Sitzwinkel" suffix="°" step={0.1} value={customGeo.seatTubeAngle} onChange={(v) => handleCustomGeoChange('seatTubeAngle', v)} tooltip="Winkel des Sitzrohrs. Steiler (>74°) bringt dich weiter nach vorne über das Tretlager (gut für Aerodynamik/Kraft)." />
+                      </div>
+                      <div className="h-px bg-border/40" />
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rahmenmaße</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SetupInput id={`${bikeName}-geo-htl`} label="Steuerrohr" suffix="mm" value={customGeo.headTubeLength} onChange={(v) => handleCustomGeoChange('headTubeLength', v)} tooltip="Länge des Steuerrohrs. Ein langes Steuerrohr hebt den Lenker an (höherer Stack) und reduziert meist die Notwendigkeit von Spacern." />
+                        <SetupInput id={`${bikeName}-geo-stl`} label="Sitzrohr" suffix="mm" value={customGeo.seatTubeLength} onChange={(v) => handleCustomGeoChange('seatTubeLength', v)} tooltip="Länge des Sitzrohrs vom Tretlager bis zur Oberkante. Bestimmt oft die Rahmengröße und wie weit die Sattelstütze herausragt." />
+                        <SetupInput id={`${bikeName}-geo-cs`} label="Kettenstrebe" suffix="mm" value={customGeo.chainstayLength} onChange={(v) => handleCustomGeoChange('chainstayLength', v)} tooltip="Länge der hinteren Streben. Kurze Streben (<410mm) machen das Rad agil und reaktiv beim Antritt, lange sorgen für Laufruhe." />
+                      </div>
+                      <div className="h-px bg-border/40" />
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fahrwerk</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SetupInput id={`${bikeName}-geo-wb`} label="Radstand" suffix="mm" value={customGeo.wheelbase} onChange={(v) => handleCustomGeoChange('wheelbase', v)} tooltip="Abstand zwischen den Radachsen. Ein langer Radstand erhöht die Stabilität bei hohem Tempo, ein kurzer macht das Rad wendiger." />
+                        <SetupInput id={`${bikeName}-geo-bbd`} label="BB Drop" suffix="mm" value={customGeo.bbDrop} onChange={(v) => handleCustomGeoChange('bbDrop', v)} tooltip="Tretlagerabsenkung gegenüber den Radachsen. Mehr Drop = tieferer Schwerpunkt und stabileres Kurvenverhalten." />
+                        <SetupInput id={`${bikeName}-geo-soh`} label="Überstand" suffix="mm" value={customGeo.standoverHeight} onChange={(v) => handleCustomGeoChange('standoverHeight', v)} tooltip="Abstand vom Boden zur Oberrohrmitte. Wichtig, um beim Anhalten sicher über dem Rahmen stehen zu können." />
+                      </div>
+                      <div className="h-px bg-border/40" />
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gabel</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <SetupInput id={`${bikeName}-geo-fo`} label="Gabel-Offset" suffix="mm" value={customGeo.forkOffset} onChange={(v) => handleCustomGeoChange('forkOffset', v)} tooltip="Auch 'Rake' genannt. Die Vorbiegung der Gabel. Beeinflusst zusammen mit dem Lenkwinkel den Nachlauf und damit die Lenkstabilität." />
+                        <SetupInput id={`${bikeName}-geo-fl`} label="Gabel-Länge" suffix="mm" value={customGeo.forkLength} onChange={(v) => handleCustomGeoChange('forkLength', v)} tooltip="Einbaulänge der Gabel von Achse bis Gabelkonus. Beeinflusst die Front-Höhe." />
+                        <SetupInput id={`${bikeName}-geo-fc`} label="Front Center" suffix="mm" value={customGeo.frontCenter} onChange={(v) => handleCustomGeoChange('frontCenter', v)} tooltip="Abstand Tretlager zur Vorderradachse. Wichtig um zu prüfen, ob die Fußspitze das Vorderrad berühren kann (Toe Overlap)." />
+                      </div>
+                    </div>
+                  ) : (
+                    /* --- READ-ONLY ROWS für normale Bikes --- */
+                    <div className="space-y-1">
+                      <GeoRow 
+                        label="Stack" 
+                        value={bike.geometry.stack} 
+                        tooltip="Vertikaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein hoher Wert bedeutet eine aufrechte, komfortable Position." 
+                      />
+                      <GeoRow 
+                        label="Reach" 
+                        value={bike.geometry.reach} 
+                        tooltip="Horizontaler Abstand vom Tretlager zur Oberkante Steuerrohr. Ein langer Reach bedeutet eine gestreckte, sportliche Haltung." 
+                      />
+                      <div className="h-px bg-border/40 my-2" />
+                      <GeoRow 
+                        label="Lenkwinkel" 
+                        value={bike.geometry.headTubeAngle} 
+                        unit="°" 
+                        tooltip="Der Winkel der Gabel zum Boden. Flacher (<72°) sorgt für Laufruhe, steiler (>73°) für agiles, direktes Lenkverhalten." 
+                      />
+                      <GeoRow 
+                        label="Sitzwinkel" 
+                        value={bike.geometry.seatTubeAngle} 
+                        unit="°" 
+                        tooltip="Winkel des Sitzrohrs. Steiler (>74°) bringt dich weiter nach vorne über das Tretlager (gut für Aerodynamik/Kraft)." 
+                      />
+                      <div className="h-px bg-border/40 my-2" />
+                      <GeoRow 
+                        label="Radstand" 
+                        value={bike.geometry.wheelbase} 
+                        tooltip="Abstand zwischen den Radachsen. Ein langer Radstand erhöht die Stabilität bei hohem Tempo, ein kurzer macht das Rad wendiger." 
+                      />
+                      <GeoRow 
+                        label="Überstand" 
+                        value={bike.geometry.standoverHeight} 
+                        tooltip="Abstand vom Boden zur Oberrohrmitte. Wichtig, um beim Anhalten sicher über dem Rahmen stehen zu können." 
+                      />
+                      <div className="h-px bg-border/40 my-2" />
+                      <GeoRow 
+                        label="Gabel-Offset" 
+                        value={bike.geometry.forkOffset} 
+                        tooltip="Auch 'Rake' genannt. Die Vorbiegung der Gabel. Beeinflusst zusammen mit dem Lenkwinkel den Nachlauf und damit die Lenkstabilität." 
+                      />
+                      <GeoRow 
+                        label="Gabel-Länge" 
+                        value={bike.geometry.forkLength} 
+                        tooltip="Einbaulänge der Gabel von Achse bis Gabelkonus. Beeinflusst die Front-Höhe." 
+                      />
+                      <GeoRow 
+                        label="BB Drop" 
+                        value={bike.geometry.bbDrop} 
+                        tooltip="Tretlagerabsenkung gegenüber den Radachsen. Mehr Drop = tieferer Schwerpunkt und stabileres Kurvenverhalten." 
+                      />
+                      <GeoRow 
+                        label="Steuerrohr" 
+                        value={bike.geometry.headTubeLength} 
+                        tooltip="Länge des Steuerrohrs. Ein langes Steuerrohr hebt den Lenker an (höherer Stack) und reduziert meist die Notwendigkeit von Spacern." 
+                      />
+                      <GeoRow 
+                        label="Sitzrohr" 
+                        value={bike.geometry.seatTubeLength} 
+                        tooltip="Länge des Sitzrohrs vom Tretlager bis zur Oberkante. Bestimmt oft die Rahmengröße und wie weit die Sattelstütze herausragt." 
+                      />
+                      <GeoRow 
+                        label="Kettenstrebe" 
+                        value={bike.geometry.chainstayLength} 
+                        tooltip="Länge der hinteren Streben. Kurze Streben (<410mm) machen das Rad agil und reaktiv beim Antritt, lange sorgen für Laufruhe." 
+                      />
+                      <GeoRow 
+                        label="Front Center" 
+                        value={bike.geometry.frontCenter} 
+                        tooltip="Abstand Tretlager zur Vorderradachse. Wichtig um zu prüfen, ob die Fußspitze das Vorderrad berühren kann (Toe Overlap)." 
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

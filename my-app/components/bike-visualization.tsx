@@ -624,7 +624,9 @@ const BikeVisualization = ({
             <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border">
               <div className="w-3 h-3 rounded-full bg-[#e74c3c]" />
               <span className="font-medium text-[10px]">
-                {bikeA.brand} {bikeA.model} ({bikeA.size})
+                {bikeA.brand === '__custom__'
+                  ? `${bikeA.model}`
+                  : `${bikeA.brand} ${bikeA.model} (${bikeA.size})`}
               </span>
             </div>
           )}
@@ -632,7 +634,9 @@ const BikeVisualization = ({
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-[#3498db]" />
               <span className="font-medium text-[10px]">
-                {bikeB.brand} {bikeB.model} ({bikeB.size})
+                {bikeB.brand === '__custom__'
+                  ? `${bikeB.model}`
+                  : `${bikeB.brand} ${bikeB.model} (${bikeB.size})`}
               </span>
             </div>
           )}
