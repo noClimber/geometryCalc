@@ -190,8 +190,8 @@ function HomeContent() {
             setIsPedaling={setIsPedaling}
           />
       </div>
-      {/* Sidebar - auf Mobile unten scrollbar, auf Desktop links, im Mobile-Landscape versteckt */}
-      <div className="hidden md:portrait:flex lg:flex w-full md:w-[380px] bg-card flex-col md:h-screen md:overflow-y-auto z-0 pb-10 md:pb-0">
+      {/* Sidebar - auf Mobile unten scrollbar, auf Desktop links */}
+      <div className="w-full md:w-[380px] bg-card flex flex-col md:h-screen md:overflow-y-auto z-0 pb-10 md:pb-0">
         <div className="p-4 md:p-6 border-b border-border">
 <div className="mb-0 pb-0">
             <div className="flex items-center justify-between">
