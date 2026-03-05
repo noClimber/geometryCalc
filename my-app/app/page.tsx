@@ -180,9 +180,9 @@ function HomeContent() {
   }, [isPedaling, bikeB])
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-background relative">
+    <div className="flex flex-col md:flex-row min-h-[100dvh] md:h-screen bg-background relative">
       {/* SVG/Visualization - sticky auf Mobile, rechts auf Desktop */}
-      <div className="w-full h-[45vh] md:h-screen md:flex-1 bg-background p-2 md:p-6 sticky top-0 md:relative z-10 border-b md:border-b-0 border-border shadow-sm md:shadow-none md:order-last">
+      <div className="w-full h-[55dvh] max-h-[600px] md:max-h-none md:h-screen md:flex-1 bg-background p-2 md:p-6 sticky top-0 md:relative z-10 border-b md:border-b-0 border-border shadow-sm md:shadow-none md:order-last">
         <BikeVisualization
             bikeA={bikeA}
             bikeB={bikeB}
