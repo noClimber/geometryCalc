@@ -342,31 +342,169 @@ const BikeVisualization = ({
         {WHEEL_POINT_IDS.map((id) => {
           const p = points[id]
           if (!p) return null
-          const outerRadius = (690 / 2) * SCALE // mm -> SVG units
-          const rimRadius = (622 / 2) * SCALE // mm -> SVG units
+          const tireRadius = (690 / 2) * SCALE
+          const aeroRimRadius = (690 / 2 - 15) * SCALE
+          const rimRadius = (622 / 2) * SCALE
+          const hubR = 6
+          const spokeHubR = 10
+          const isFront = id === 'frontWheel'
+          const spokeCount = isFront ? 16 : 24
+
+          // Speichen berechnen
+          const spokes: { x1: number; y1: number; x2: number; y2: number }[] = []
+          if (isFront) {
+            // Radiale Speichen
+            for (let i = 0; i < spokeCount; i++) {
+              const rad = (i * 2 * Math.PI) / spokeCount
+              spokes.push({
+                x1: p.x + spokeHubR * Math.cos(rad),
+                y1: p.y + spokeHubR * Math.sin(rad),
+                x2: p.x + rimRadius * Math.cos(rad),
+                y2: p.y + rimRadius * Math.sin(rad),
+              })
+            }
+          } else {
+            // Gekreuzte Speichen (2×12)
+            const half = spokeCount / 2
+            const crossRad = (35 * Math.PI) / 180
+            for (let i = 0; i < half; i++) {
+              const startRad = (i * 2 * Math.PI) / half
+              spokes.push({
+                x1: p.x + spokeHubR * Math.cos(startRad),
+                y1: p.y + spokeHubR * Math.sin(startRad),
+                x2: p.x + rimRadius * Math.cos(startRad + crossRad),
+                y2: p.y + rimRadius * Math.sin(startRad + crossRad),
+              })
+            }
+            for (let i = 0; i < half; i++) {
+              const startRad = (i * 2 * Math.PI) / half + Math.PI / half
+              spokes.push({
+                x1: p.x + spokeHubR * Math.cos(startRad),
+                y1: p.y + spokeHubR * Math.sin(startRad),
+                x2: p.x + rimRadius * Math.cos(startRad - crossRad),
+                y2: p.y + rimRadius * Math.sin(startRad - crossRad),
+              })
+            }
+          }
+
+          const discRadius = (160 / 3) * SCALE
+          const isRear = id === 'rearWheel'
+          const cassetteRadii = [10, 15, 20, 26]
+
           return (
             <g key={id}>
+              {/* Speichen */}
+              {spokes.map((s, i) => (
+                <line
+                  key={`spoke-${i}`}
+                  x1={s.x1} y1={s.y1}
+                  x2={s.x2} y2={s.y2}
+                  stroke="#888"
+                  strokeWidth="1"
+                  opacity="0.25"
+                />
+              ))}
+              {/* Bremsscheibe */}
               <circle
-                cx={p.x}
-                cy={p.y}
-                r={outerRadius}
+                cx={p.x} cy={p.y}
+                r={discRadius}
+                stroke="#94a3b8"
+                strokeWidth="3"
+                strokeDasharray="8,4"
+                fill="none"
+                opacity={0.4}
+              />
+              {/* Kassette (nur Hinterrad) */}
+              {isRear && (
+                <g>
+                  {cassetteRadii.map((r) => (
+                    <circle
+                      key={`cassette-${r}`}
+                      cx={p.x} cy={p.y}
+                      r={r}
+                      stroke="#64748b"
+                      strokeWidth="2"
+                      fill="none"
+                      opacity={0.5}
+                    />
+                  ))}
+                </g>
+              )}
+              {/* Aero-Carbon-Felge (dicker Ring) */}
+              <circle
+                cx={p.x} cy={p.y}
+                r={aeroRimRadius}
                 stroke={color}
-                strokeWidth="2"
+                strokeWidth="14"
+                fill="none"
+                opacity={0.22}
+              />
+              {/* Felgenbett (innen) */}
+              <circle
+                cx={p.x} cy={p.y}
+                r={rimRadius}
+                stroke={color}
+                strokeWidth="1.5"
                 fill="none"
                 opacity={opacity}
               />
+              {/* Reifen (außen, dunkelgrau) */}
               <circle
-                cx={p.x}
-                cy={p.y}
-                r={rimRadius}
-                stroke={color}
-                strokeWidth="1"
+                cx={p.x} cy={p.y}
+                r={tireRadius}
+                stroke="#444"
+                strokeWidth="4"
                 fill="none"
-                opacity={Math.max(0.2, opacity - 0.1)}
+                opacity={opacity}
+              />
+              {/* Nabe */}
+              <circle
+                cx={p.x} cy={p.y}
+                r={hubR}
+                fill={color}
+                stroke="none"
+                opacity={opacity}
               />
             </g>
           )
         })}
+
+        {/* Kettenblatt am Tretlager */}
+        {points.bb && (
+          <circle
+            cx={points.bb.x}
+            cy={points.bb.y}
+            r={75 * SCALE}
+            stroke={color}
+            strokeWidth="1.5"
+            strokeDasharray="4,4"
+            fill="none"
+            opacity={opacity * 0.8}
+          />
+        )}
+
+        {/* Schaltwerk an der Hinterachse */}
+        {points.rearWheel && (() => {
+          const rx = points.rearWheel.x
+          const ry = points.rearWheel.y
+          const topPulleyY = ry + 28
+          const botPulleyY = ry + 44
+          return (
+            <g opacity={opacity * 0.75}>
+              {/* Käfig */}
+              <polygon
+                points={`${rx},${ry + 10} ${rx - 8},${botPulleyY + 8} ${rx + 8},${botPulleyY + 8}`}
+                fill="none"
+                stroke="#888"
+                strokeWidth="1.5"
+              />
+              {/* Obere Schaltrolle */}
+              <circle cx={rx} cy={topPulleyY} r={5} fill="none" stroke="#888" strokeWidth="1.5" />
+              {/* Untere Schaltrolle */}
+              <circle cx={rx} cy={botPulleyY} r={5} fill="none" stroke="#888" strokeWidth="1.5" />
+            </g>
+          )
+        })()}
 
         {/* Key-Points (kleine Kreise) */}
         {KEY_POINT_IDS.map((id) => {
