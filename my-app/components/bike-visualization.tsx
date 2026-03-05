@@ -546,152 +546,10 @@ const BikeVisualization = ({
 
     return (
     <div className="relative h-full flex flex-col overflow-hidden">
-      {/* SVG Area */}
-      <Card 
-        className="bg-card p-6 overflow-hidden transition-all duration-300 ease-in-out"
-        style={{
-          flex: '1 1 auto',
-          minHeight: 0,
-        }}
-      >
-        <div 
-          className="h-full w-full relative overflow-hidden cursor-grab active:cursor-grabbing"
-          onWheel={handleWheel}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-        {/* Grid background */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ opacity: 0.1 }}
-        >
-          <defs>
-            <pattern
-              id="grid"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 20 0 L 0 0 0 20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="0.5"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-
-        {/* Bike visualization */}
-        <svg
-          ref={svgRef}
-          onClick={handleSvgClick}
-          style={{ pointerEvents: measureMode ? 'all' : 'auto' }}
-          className="absolute inset-0 w-full h-full"
-          viewBox={`${minX} ${minY} ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-        >
-                  {/* Disclaimer & Branding */}
-                  <g
-                    pointerEvents="none"
-                    style={{ userSelect: 'none' }}
-                    fontFamily="'Segoe UI', 'Arial', 'sans-serif'"
-                    fontSize={Math.max(24, width * 0.035)}
-                    textAnchor="middle"
-                    fill="#9ca3af"
-                  >
-                    {(() => {
-                      const paddingBottom = 40;
-                      const line1Size = Math.max(28, width * 0.045);
-                      const line2Size = Math.max(20, width * 0.032);
-                      const lineSpacing = 8;
-                      const centerX = 250;
-                      const y1 = minY + height - paddingBottom - line2Size - lineSpacing;
-                      const y2 = minY + height - paddingBottom;
-                      return <>
-                        <text
-                          x={centerX}
-                          y={y1}
-                          fontWeight="bold"
-                          fontSize={line1Size}
-                          style={{ letterSpacing: 0.5 }}
-                        >
-                          Bike Geometry Calculator
-                        </text>
-                        <text
-                          x={centerX}
-                          y={y2}
-                          fontWeight="normal"
-                          fontSize={line2Size}
-                          style={{ letterSpacing: 0.2 }}
-                        >
-                          {'\u26A0\uFE0F'} Dient nur zur Visualisierung, kein medizinscher Rat!
-                        </text>
-                      </>;
-                    })()}
-                  </g>
-          <g transform={`translate(${pan.x / zoom}, ${pan.y / zoom}) scale(${zoom})`}>
-            {geometryA && renderBike(geometryA, '#e74c3c', 0.7, 'A')}
-            {geometryB && renderBike(geometryB, '#3498db', 0.7, 'B')}
-            
-            {/* Messlinie */}
-            {measureLine && (
-              <g>
-                <line x1={measureLine.x1} y1={measureLine.y1} x2={measureLine.x2} y2={measureLine.y2} stroke="#f39c12" strokeWidth="2" strokeDasharray="5,5" />
-                <text x={(measureLine.x1 + measureLine.x2) / 2} y={(measureLine.y1 + measureLine.y2) / 2 - 10} fill="#f39c12" fontSize="14" fontWeight="bold" textAnchor="middle">
-                  {measureDistance.toFixed(1)} mm
-                </text>
-                <line x1={measureLine.x1} y1={measureLine.y2} x2={measureLine.x2} y2={measureLine.y2} stroke="#3498db" strokeWidth="1.5" strokeDasharray="3,3" />
-                <text x={(measureLine.x1 + measureLine.x2) / 2} y={measureLine.y2 + 20} fill="#3498db" fontSize="12" fontWeight="bold" textAnchor="middle">
-                  ΔX: {measureDx.toFixed(1)} mm
-                </text>
-                <line x1={measureLine.x1} y1={measureLine.y1} x2={measureLine.x1} y2={measureLine.y2} stroke="#e74c3c" strokeWidth="1.5" strokeDasharray="3,3" />
-                <text x={measureLine.x1 - 20} y={(measureLine.y1 + measureLine.y2) / 2} fill="#e74c3c" fontSize="12" fontWeight="bold" textAnchor="middle">
-                  ΔY: {measureDy.toFixed(1)} mm
-                </text>
-              </g>
-            )}
-          </g>
-        </svg>
-
-        {/* Zoom Controls */}
-        <div className="absolute top-2 right-2 flex flex-col gap-2 z-50">
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="secondary" size="icon" onClick={handleZoomIn} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border"><ZoomIn className="h-4 w-4" /></Button>
-              </TooltipTrigger>
-              <TooltipContent side="left"><p className="text-xs">Vergrößern</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="secondary" size="icon" onClick={handleZoomOut} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border"><ZoomOut className="h-4 w-4" /></Button>
-              </TooltipTrigger>
-              <TooltipContent side="left"><p className="text-xs">Verkleinern</p></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="secondary" size="icon" onClick={handleResetView} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border mt-1"><Maximize className="h-4 w-4" /></Button>
-              </TooltipTrigger>
-              <TooltipContent side="left"><p className="text-xs">Zentrieren</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        </div>
-      </Card>
 
       {/* --- UI OVERLAYS (Controls & Measurements) --- */}
-      {/* 
-        Das hier ist der Trick: Der Container ist absolut positioniert und klammert sich an alle Ränder (top, bottom). 
-        Dadurch WEISS er auf den Pixel genau, wie groß der Bildschirm ist, und ragt niemals darüber hinaus.
-      */}
-      <div className="absolute top-2 left-2 bottom-2 right-2 md:top-4 md:left-4 md:bottom-4 md:right-auto z-40 pointer-events-none flex flex-col gap-2">
+      {/* Mobile: normal flow above SVG | Desktop: absolute overlay top-left */}
+      <div className="md:absolute md:top-4 md:left-4 md:bottom-4 md:right-auto z-40 md:pointer-events-none flex flex-col gap-2 flex-none">
         
         {/* Control Panel */}
         <div className="pointer-events-auto bg-card/95 md:bg-background/90 backdrop-blur-md border border-border rounded-xl p-2 shadow-lg w-full md:w-[160px] flex-none">
@@ -740,8 +598,7 @@ const BikeVisualization = ({
             onWheel={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
-            /* Durch flex-1 min-h-0 nutzt diese Box perfekt den Restplatz bis zum unteren Bildschirmrand und aktiviert ihren Scrollbalken! */
-            className="pointer-events-auto w-full md:w-80 shadow-2xl border border-border bg-card rounded-lg flex flex-col flex-1 min-h-0"
+            className="pointer-events-auto w-full md:w-80 shadow-2xl border border-border bg-card rounded-lg flex flex-col h-[280px] md:flex-1 md:h-auto md:min-h-0"
           >
             {/* Header with close button */}
             <div className="flex justify-between items-center p-3 border-b border-border bg-muted/20 flex-none">
@@ -878,6 +735,147 @@ const BikeVisualization = ({
         )}
 
       </div>
+
+      {/* SVG Area */}
+      <Card 
+        className="bg-card p-6 overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          flex: '1 1 auto',
+          minHeight: 0,
+        }}
+      >
+        <div 
+          className="h-full w-full relative overflow-hidden cursor-grab active:cursor-grabbing touch-none"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+        {/* Grid background */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ opacity: 0.1 }}
+        >
+          <defs>
+            <pattern
+              id="grid"
+              width="20"
+              height="20"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 20 0 L 0 0 0 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+
+        {/* Bike visualization */}
+        <svg
+          ref={svgRef}
+          onClick={handleSvgClick}
+          style={{ pointerEvents: measureMode ? 'all' : 'auto' }}
+          className="absolute inset-0 w-full h-full"
+          viewBox={`${minX} ${minY} ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+        >
+                  {/* Disclaimer & Branding */}
+                  <g
+                    pointerEvents="none"
+                    style={{ userSelect: 'none' }}
+                    fontFamily="'Segoe UI', 'Arial', 'sans-serif'"
+                    fontSize={Math.max(24, width * 0.035)}
+                    textAnchor="middle"
+                    fill="#9ca3af"
+                  >
+                    {(() => {
+                      const paddingBottom = 40;
+                      const line1Size = Math.max(28, width * 0.045);
+                      const line2Size = Math.max(20, width * 0.032);
+                      const lineSpacing = 8;
+                      const centerX = minX + width / 2;
+                      const y1 = minY + height - paddingBottom - line2Size - lineSpacing;
+                      const y2 = minY + height - paddingBottom;
+                      return <>
+                        <text
+                          x={centerX}
+                          y={y1}
+                          fontWeight="bold"
+                          fontSize={line1Size}
+                          style={{ letterSpacing: 0.5 }}
+                        >
+                          Bike Geometry Calculator
+                        </text>
+                        <text
+                          x={centerX}
+                          y={y2}
+                          fontWeight="normal"
+                          fontSize={line2Size}
+                          style={{ letterSpacing: 0.2 }}
+                        >
+                          {'\u26A0\uFE0F'} Dient nur zur Visualisierung, kein medizinscher Rat!
+                        </text>
+                      </>;
+                    })()}
+                  </g>
+          <g transform={`translate(${pan.x / zoom}, ${pan.y / zoom}) scale(${zoom})`}>
+            {geometryA && renderBike(geometryA, '#e74c3c', 0.7, 'A')}
+            {geometryB && renderBike(geometryB, '#3498db', 0.7, 'B')}
+            
+            {/* Messlinie */}
+            {measureLine && (
+              <g>
+                <line x1={measureLine.x1} y1={measureLine.y1} x2={measureLine.x2} y2={measureLine.y2} stroke="#f39c12" strokeWidth="2" strokeDasharray="5,5" />
+                <text x={(measureLine.x1 + measureLine.x2) / 2} y={(measureLine.y1 + measureLine.y2) / 2 - 10} fill="#f39c12" fontSize="14" fontWeight="bold" textAnchor="middle">
+                  {measureDistance.toFixed(1)} mm
+                </text>
+                <line x1={measureLine.x1} y1={measureLine.y2} x2={measureLine.x2} y2={measureLine.y2} stroke="#3498db" strokeWidth="1.5" strokeDasharray="3,3" />
+                <text x={(measureLine.x1 + measureLine.x2) / 2} y={measureLine.y2 + 20} fill="#3498db" fontSize="12" fontWeight="bold" textAnchor="middle">
+                  ΔX: {measureDx.toFixed(1)} mm
+                </text>
+                <line x1={measureLine.x1} y1={measureLine.y1} x2={measureLine.x1} y2={measureLine.y2} stroke="#e74c3c" strokeWidth="1.5" strokeDasharray="3,3" />
+                <text x={measureLine.x1 - 20} y={(measureLine.y1 + measureLine.y2) / 2} fill="#e74c3c" fontSize="12" fontWeight="bold" textAnchor="middle">
+                  ΔY: {measureDy.toFixed(1)} mm
+                </text>
+              </g>
+            )}
+          </g>
+        </svg>
+
+        {/* Zoom Controls */}
+        <div className="absolute top-2 right-2 flex flex-col gap-2 z-50">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="secondary" size="icon" onClick={handleZoomIn} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border"><ZoomIn className="h-4 w-4" /></Button>
+              </TooltipTrigger>
+              <TooltipContent side="left"><p className="text-xs">Vergrößern</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="secondary" size="icon" onClick={handleZoomOut} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border"><ZoomOut className="h-4 w-4" /></Button>
+              </TooltipTrigger>
+              <TooltipContent side="left"><p className="text-xs">Verkleinern</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="secondary" size="icon" onClick={handleResetView} className="h-8 w-8 rounded-full shadow-md bg-background/80 backdrop-blur-sm border border-border mt-1"><Maximize className="h-4 w-4" /></Button>
+              </TooltipTrigger>
+              <TooltipContent side="left"><p className="text-xs">Zentrieren</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        </div>
+      </Card>
+
     </div>
   )
 
