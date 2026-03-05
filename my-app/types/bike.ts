@@ -35,6 +35,11 @@ export type RiderSetup = {
   riderInseam: number
   torsoAngle: number
   shoeThickness: number
+  // Expert Mode
+  isExpertMode?: boolean
+  torsoLength?: number
+  armLength?: number
+  lowerLegLength?: number
 }
 
 export type BikeData = {

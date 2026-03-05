@@ -178,9 +178,9 @@ const [geoOpen, setGeoOpen] = useState(false)
       if (!bike) return; const raw = Number.isFinite(value) ? value : (bike.cockpit as any)[field] ?? 0
       const safeValue = clampCockpitValue(field as any, raw); setBike({ ...bike, cockpit: { ...bike.cockpit, [field]: safeValue } })
   }
-  const handleRiderChange = (field: keyof RiderSetup, value: number) => {
+  const handleRiderChange = (field: keyof RiderSetup, value: number | boolean) => {
     if (!bike) return
-    const safeValue = Number.isFinite(value) ? value : bike.rider[field]
+    const safeValue = typeof value === 'boolean' ? value : (Number.isFinite(value) ? value : bike.rider[field])
     setBike({ ...bike, rider: { ...bike.rider, [field]: safeValue } })
   }
   const handleHandPositionChange = (position: 'hoods' | 'drops') => { /* ... wie vorher ... */ 
@@ -467,13 +467,49 @@ const [geoOpen, setGeoOpen] = useState(false)
                <div className="border-t border-border/40" />
                
                <div className="space-y-3">
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Fahrer Körpermaße</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Fahrer Körpermaße</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <TooltipProvider delayDuration={300}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-3 w-3 text-muted-foreground/50 hover:text-foreground cursor-help transition-colors" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[200px] text-xs">
+                            <p>Aktivieren, um exakte Millimetermaße für Torso, Arme und Beine einzugeben, anstatt statistische Durchschnitts-Proportionen zu nutzen.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-wide">Expert Mode:</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 cursor-pointer group bg-muted/30 p-1 rounded-full border border-border/30 hover:bg-muted/50 transition-colors"
+                         onClick={() => handleRiderChange('isExpertMode', !bike.rider.isExpertMode)}>
+                      <span className={`text-[10px] font-medium px-1.5 transition-colors ${!bike.rider.isExpertMode ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>Off</span>
+                      <div className="relative h-3.5 w-7 bg-muted/80 rounded-full border border-border/20 shadow-inner">
+                        <div className="absolute top-0.5 h-2.5 w-2.5 bg-primary rounded-full shadow-sm transition-transform duration-200 ease-out"
+                             style={{ transform: bike.rider.isExpertMode ? 'translateX(0.875rem)' : 'translateX(0)', left: '0.125rem' }} />
+                      </div>
+                      <span className={`text-[10px] font-medium px-1.5 transition-colors ${bike.rider.isExpertMode ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>On</span>
+                    </div>
+                  </div>
+                </div>
                  <div className="grid grid-cols-2 gap-3">
                     <SetupInput id={`${bikeName}-height`} label="Körpergröße" suffix="mm" value={bike.rider.riderHeight} onChange={(v) => handleRiderChange('riderHeight', v)} min={1500} max={2200} step={10} tooltip="Deine gesamte Körpergröße. Dient als Basis für viele Proportionsberechnungen." />
                     <SetupInput id={`${bikeName}-inseam`} label="Schrittlänge" suffix="mm" value={bike.rider.riderInseam} onChange={(v) => handleRiderChange('riderInseam', v)} min={700} max={1100} step={10} tooltip="Die Innenbeinlänge, gemessen vom Boden bis zum Schritt. Entscheidend für die Berechnung der korrekten Sattelhöhe." />
                     <SetupInput id={`${bikeName}-torso`} label="Rückenwinkel" suffix="°" value={bike.rider.torsoAngle} onChange={(v) => handleRiderChange('torsoAngle', v)} min={0} max={90} tooltip="Der gewünschte Winkel deines Oberkörpers relativ zur Horizontalen. Ein kleinerer Winkel bedeutet eine flachere, aerodynamischere Haltung." />
                     <SetupInput id={`${bikeName}-shoe`} label="Schuhdicke" suffix="mm" value={bike.rider.shoeThickness} onChange={(v) => handleRiderChange('shoeThickness', v)} min={0} max={50} tooltip="Die Dicke der Sohle deiner Radschuhe, inklusive Cleats. Beeinflusst die effektive Beinlänge." />
                  </div>
+                 {bike.rider.isExpertMode && (
+                   <>
+                     <div className="h-px bg-border/40 my-3" />
+                     <div className="grid grid-cols-2 gap-3">
+                       <SetupInput id={`${bikeName}-torso-len`} label="Torso-Länge" suffix="mm" value={bike.rider.torsoLength ?? 630} onChange={(v) => handleRiderChange('torsoLength', v)} tooltip="Gemessen vom Brustbein (Sternal Notch) bis zum Schritt. Ein langer Torso erfordert oft einen längeren Reach (Vorbau), selbst wenn die Körpergröße durchschnittlich ist." />
+                       <SetupInput id={`${bikeName}-arm-len`} label="Armlänge" suffix="mm" value={bike.rider.armLength ?? 650} onChange={(v) => handleRiderChange('armLength', v)} tooltip="Gemessen vom Schultergelenk bis zur Faustmitte (am Lenker). Lange Arme (hoher Ape-Index) erlauben eine flachere Haltung ohne extremen Rückenwinkel." />
+                       <SetupInput id={`${bikeName}-lower-leg`} label="Unterschenkel" suffix="mm" value={bike.rider.lowerLegLength ?? 420} onChange={(v) => handleRiderChange('lowerLegLength', v)} tooltip="Gemessen vom Kniegelenk bis zum Knöchel. Das Verhältnis von Unter- zu Oberschenkel ist entscheidend für den Sattel-Nachsitz (Saddle Setback) und das Knielot über der Pedalachse." />
+                     </div>
+                   </>
+                 )}
               </div>
 
             </div>

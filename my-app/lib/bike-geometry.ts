@@ -317,6 +317,10 @@ export function calculateBikeGeometry(
   const RIDER_INSEAM = rider.riderInseam    // mm - Innenbeinlänge (Schritt bis Boden)
   const TORSO_ANGLE = rider.torsoAngle      // Grad - Oberkörperneigung
   const CLEAT_DROP = rider.shoeThickness    // mm - Schuhdicke (Pedalachse → Fußsohle)
+  const IS_EXPERT_MODE = rider.isExpertMode ?? false
+  const EXPERT_TORSO = rider.torsoLength ?? 630
+  const EXPERT_ARM = rider.armLength ?? 650
+  const EXPERT_LOWER_LEG = rider.lowerLegLength ?? 420
 
   const points: Record<string, Point2D> = {}
   const segments: Segment[] = []
@@ -494,8 +498,8 @@ export function calculateBikeGeometry(
   // 6. FAHRER (Beine & Fuß)
   // ──────────────────────────────────────────────────────────────────────────
 
-  const lowerLegLength = RIDER_INSEAM * LOWER_LEG_RATIO * SCALE
-  const upperLegLength = RIDER_INSEAM * UPPER_LEG_RATIO * SCALE
+  const lowerLegLength = IS_EXPERT_MODE ? EXPERT_LOWER_LEG * SCALE : RIDER_INSEAM * LOWER_LEG_RATIO * SCALE
+  const upperLegLength = IS_EXPERT_MODE ? (RIDER_INSEAM * SCALE) - lowerLegLength : RIDER_INSEAM * UPPER_LEG_RATIO * SCALE
 
   // Fußposition: Cleat-Kontaktpunkt liegt hinter und unter der Pedalachse
   const pedalPos = points.pedalRight
@@ -625,7 +629,7 @@ export function calculateBikeGeometry(
 
   const headHeight = RIDER_HEIGHT * HEAD_RATIO * SCALE
   const neckLength = RIDER_HEIGHT * NECK_RATIO * SCALE
-  const torsoLength = (RIDER_HEIGHT - RIDER_INSEAM - headHeight / SCALE - neckLength / SCALE) * SCALE
+  const torsoLength = IS_EXPERT_MODE ? EXPERT_TORSO * SCALE : (RIDER_HEIGHT - RIDER_INSEAM - headHeight / SCALE - neckLength / SCALE) * SCALE
   
 const sitboneOffset = typeof cockpit.sitboneOffset === 'number' ? cockpit.sitboneOffset : -20;
 const sitPos = {
@@ -659,8 +663,8 @@ const sitPos = {
 
   // Anatomische Beinlänge = Innenbeinlänge + Hüftgelenk-Offset
   const anatomicalInseam = RIDER_INSEAM + hipJointOffset / SCALE
-  const newLowerLegLength = anatomicalInseam * LOWER_LEG_RATIO * SCALE
-  const newUpperLegLength = anatomicalInseam * UPPER_LEG_RATIO * SCALE
+  const newLowerLegLength = IS_EXPERT_MODE ? EXPERT_LOWER_LEG * SCALE : anatomicalInseam * LOWER_LEG_RATIO * SCALE
+  const newUpperLegLength = IS_EXPERT_MODE ? (anatomicalInseam * SCALE) - newLowerLegLength : anatomicalInseam * UPPER_LEG_RATIO * SCALE
   const newTotalLegLength = newLowerLegLength + newUpperLegLength
 
   // Knie-Position via IK (von Hüftgelenk zu Fußkontakt)
@@ -746,8 +750,9 @@ const sitPos = {
   const armDy = handPos.y - shoulderPos.y
   const armDist = Math.sqrt(armDx * armDx + armDy * armDy)
   
-  const upperArmScaled = RIDER_HEIGHT * UPPER_ARM_RATIO * SCALE
-  const lowerArmScaled = RIDER_HEIGHT * LOWER_ARM_RATIO * SCALE
+  const totalArmRatio = UPPER_ARM_RATIO + LOWER_ARM_RATIO
+  const upperArmScaled = IS_EXPERT_MODE ? (EXPERT_ARM * SCALE) * (UPPER_ARM_RATIO / totalArmRatio) : RIDER_HEIGHT * UPPER_ARM_RATIO * SCALE
+  const lowerArmScaled = IS_EXPERT_MODE ? (EXPERT_ARM * SCALE) * (LOWER_ARM_RATIO / totalArmRatio) : RIDER_HEIGHT * LOWER_ARM_RATIO * SCALE
   const totalArmLength = upperArmScaled + lowerArmScaled
   
   let elbowPos: Point2D
